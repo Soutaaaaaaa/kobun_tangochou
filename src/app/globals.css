@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 藍（主色）・朱（まだ/不正解）・若竹（覚えた/正解）。カテゴリ色 c1–c4 */
+:root {
+  --bg: #eef1f6; --surface: #ffffff; --surface-2: #f6f8fb; --ink: #1a2132; --muted: #5d667c; --line: #d8dde8;
+  --ai: #264579; --ai-soft: #e3e9f4; --shu: #c4412d; --shu-soft: #f8e4df; --take: #2f7a4a; --take-soft: #e0f0e5;
+  --c1: #264579; --c2: #6a4a8c; --c3: #94661a; --c4: #2c706b;
+  --shadow: 0 1px 2px rgba(20,30,60,.06), 0 8px 24px rgba(20,30,60,.08);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11141b; --surface: #1a1f29; --surface-2: #151a22; --ink: #e5e8ef; --muted: #98a1b4; --line: #2b3240;
+    --ai: #86a5dc; --ai-soft: #222c3e; --shu: #ec7a65; --shu-soft: #3a2320; --take: #79bf8f; --take-soft: #1d3326;
+    --c1: #86a5dc; --c2: #b398d6; --c3: #d6aa5c; --c4: #6cc0b8;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+}
+
+html, body { min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 2px solid var(--ai); outline-offset: 2px; }
+
+@layer components {
+  .btn {
+    @apply flex min-h-[44px] items-center justify-center gap-1.5 rounded-[10px] border border-line bg-surface px-3 py-2.5 text-sm font-bold text-ink disabled:opacity-45;
+  }
+  .btn-primary { @apply border-ai bg-ai text-surface; }
+  .panel { @apply rounded-[14px] bg-surface shadow-card; }
+  .meter { @apply h-2 overflow-hidden rounded-full border border-line bg-surface-2; }
+  .meter > i { @apply block h-full rounded-full bg-take transition-[width] duration-300; }
+  .chip-dot::before { content: ""; @apply mr-1.5 inline-block h-2 w-2 rounded-[2px] align-[1px]; background: var(--cc); }
+  .input {
+    @apply w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-base text-ink outline-none focus:border-ai;
+  }
+  .seg-btn { @apply rounded-full border-[1.5px] border-line bg-surface px-3.5 py-1.5 text-[13px] font-medium; }
+  .seg-btn[aria-pressed="true"] { @apply border-ai bg-ai-soft font-bold text-ai; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+}
