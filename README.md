@@ -77,9 +77,11 @@ supabase/migrations/       DB スキーマ
 
 ### 管理者の追加・解除
 
-SQL Editor で実行します。
+SQL Editor で実行します。アカウント名は小文字で保存されるので、小文字で書いてください。
 
 ```sql
-update public.profiles set is_admin = true  where username = 'Admin';   -- 管理者にする
-update public.profiles set is_admin = false where username = 'Admin';   -- 解除する
-```解答の記録は `record_answer` 関数で、状態の更新とログの追加を1回で行います。
+update public.profiles set is_admin = true  where username = 'admin';   -- 管理者にする
+update public.profiles set is_admin = false where username = 'admin';   -- 解除する
+```
+
+解答の記録は `record_answer` 関数で、状態の更新とログの追加を1回で行います。
