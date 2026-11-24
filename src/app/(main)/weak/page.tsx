@@ -47,18 +47,18 @@ export default function WeakPage() {
             <small className="ml-1 font-body text-sm font-medium text-muted">語</small>
           </p>
           <p className="text-[13px] text-muted">
-            間違えた単語は自動で入ります。カードで「覚えた」にするか、クイズで2回続けて正解すると外れます。各単語の「苦手」ボタンでも出し入れできます。
+            間違えた単語は自動で入ります。2回続けて正解すると外れます（カードの「覚えた」も正解に数えます）。各単語の「苦手」ボタンでも出し入れできます。
           </p>
           <div className="grid grid-cols-2 gap-2">
             <Link
               className={`btn btn-primary ${ids.length ? "" : "pointer-events-none opacity-45"}`}
-              href={studyHref({ mode: "cards", ids, order: "random", title: "苦手な単語" })}
+              href={studyHref({ mode: "cards", ids, order: "random", weighted: true, title: "苦手な単語" })}
             >
               カードで覚える
             </Link>
             <Link
               className={`btn ${ids.length ? "" : "pointer-events-none opacity-45"}`}
-              href={studyHref({ mode: "quiz", ids, order: "random", format: "mix", title: "苦手な単語" })}
+              href={studyHref({ mode: "quiz", ids, order: "random", format: "mix", weighted: true, title: "苦手な単語" })}
             >
               四択クイズ
             </Link>

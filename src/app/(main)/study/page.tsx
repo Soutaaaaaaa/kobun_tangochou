@@ -8,6 +8,7 @@ import { useProgress } from "@/components/ProgressProvider";
 import Quiz, { type QuizFormat } from "@/components/Quiz";
 import { isKnown } from "@/lib/progress";
 import { studyHref } from "@/lib/study-url";
+import { weightedByProgress } from "@/lib/weight";
 import { BYNUM, parseRanges, shuffle, wordsInRanges, type Word } from "@/lib/words";
 
 function Study() {
@@ -35,10 +36,13 @@ function Study() {
     if (p.get("nk") === "1") list = list.filter((w) => !isKnown(progress.get(w.n)));
     const n = Number(p.get("n") ?? 0);
     const random = p.get("order") !== "seq";
+    // 苦手リストからの出題は、間違えやすい・しばらく見ていない語が少しだけ出やすい
+    const weighted = p.get("w") === "1" || p.get("weak") === "1";
+    const mix = (l: Word[]) => (weighted ? weightedByProgress(l, progress) : shuffle(l));
     if (n > 0 && n < list.length) {
-      list = shuffle(list).slice(0, n);
+      list = mix(list).slice(0, n);
       if (!random) list.sort((a, b) => a.n - b.n);
-    } else if (random) list = shuffle(list);
+    } else if (random) list = mix(list);
     setWords(list);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, loading]);

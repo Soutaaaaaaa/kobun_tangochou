@@ -1,4 +1,5 @@
 import { daysSince, type ProgressMap } from "./progress";
+import { difficultyWeight, weightedShuffle } from "./weight";
 import { WORDS, shuffle, type Word } from "./words";
 
 export type ReviewItem = { word: Word; reason: string; kind: "priority" | "normal" };
@@ -44,6 +45,8 @@ export function buildTodayReview(progress: ProgressMap, size = REVIEW_SIZE, now 
     s += stale;
     if (dStudy >= 4) reasons.push([stale, `${Math.floor(dStudy)}日間学習していない`]);
     s += Math.max(0, p.wrong_count - p.correct_count) * 4;
+    // 表示しない傾斜：間違えた割合が高い・しばらく学習していない語を少しだけ上げる
+    s += (difficultyWeight(p, now) - 1) * 20;
     if (p.last_result && dStudy < 1) s -= 25;
     s += Math.random() * 6;
 
@@ -57,7 +60,10 @@ export function buildTodayReview(progress: ProgressMap, size = REVIEW_SIZE, now 
   const priority = scored.slice(0, Math.round(size * PRIORITY_RATIO));
   const chosen = new Set(priority.map((x) => x.word.n));
 
-  const normal = shuffle(WORDS.filter((w) => !chosen.has(w.n)))
+  const normal = weightedShuffle(
+    WORDS.filter((w) => !chosen.has(w.n)),
+    (w) => difficultyWeight(progress.get(w.n), now),
+  )
     .slice(0, size - priority.length)
     .map<ReviewItem>((w) => ({ word: w, reason: progress.get(w.n)?.last_studied_at ? "ランダム" : "はじめての単語", kind: "normal" }));
 

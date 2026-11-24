@@ -32,12 +32,12 @@ const empty = (n: number): WordProgress => ({
 });
 
 /** サーバーの record_answer と同じ規則で、画面をすぐ更新する */
-function applyLocal(p: WordProgress, correct: boolean, mode: StudyMode): WordProgress {
+function applyLocal(p: WordProgress, correct: boolean): WordProgress {
   const now = new Date().toISOString();
   const streak = correct ? p.streak + 1 : 0;
   return {
     ...p,
-    is_weak: !correct ? true : mode === "card" ? false : streak >= 2 ? false : p.is_weak,
+    is_weak: !correct ? true : streak >= 2 ? false : p.is_weak,
     last_result: correct,
     correct_count: p.correct_count + (correct ? 1 : 0),
     wrong_count: p.wrong_count + (correct ? 0 : 1),
@@ -91,7 +91,7 @@ export default function ProgressProvider({
 
   const record = useCallback(
     (wordNo: number, correct: boolean, mode: StudyMode) => {
-      setProgress((prev) => new Map(prev).set(wordNo, applyLocal(prev.get(wordNo) ?? empty(wordNo), correct, mode)));
+      setProgress((prev) => new Map(prev).set(wordNo, applyLocal(prev.get(wordNo) ?? empty(wordNo), correct)));
       supabase
         .rpc("record_answer", { p_word_no: wordNo, p_correct: correct, p_mode: mode })
         .then(({ data, error }) => {

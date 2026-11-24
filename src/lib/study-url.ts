@@ -10,6 +10,8 @@ export type StudyParams = {
   order?: "seq" | "random";
   weakOnly?: boolean;
   notKnownOnly?: boolean;
+  /** 間違えやすい語を少し出やすくする（画面には出さない） */
+  weighted?: boolean;
   format?: QuizFormat;
   title: string;
 };
@@ -23,6 +25,7 @@ export function studyHref(p: StudyParams): string {
   q.set("order", p.order ?? "random");
   if (p.weakOnly) q.set("weak", "1");
   if (p.notKnownOnly) q.set("nk", "1");
+  if (p.weighted) q.set("w", "1");
   if (p.mode === "quiz") q.set("q", p.format ?? "mix");
   q.set("t", p.title);
   return `/study?${q.toString()}`;
