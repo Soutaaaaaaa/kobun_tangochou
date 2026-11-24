@@ -60,7 +60,10 @@ export default function ProgressProvider({ username, children }: { username: str
       .select(COLS)
       .then(({ data, error }) => {
         if (!alive) return;
-        if (error) setError("学習記録を読み込めませんでした。通信状況を確認して、ページを再読み込みしてください。");
+        if (error)
+          setError(
+            `学習記録を読み込めませんでした。通信状況を確認して、ページを再読み込みしてください。（詳細: ${error.code ?? ""} ${error.message}）`,
+          );
         else setProgress(new Map((data as WordProgress[]).map((r) => [r.word_no, r])));
         setLoading(false);
       });
@@ -79,7 +82,7 @@ export default function ProgressProvider({ username, children }: { username: str
       supabase
         .rpc("record_answer", { p_word_no: wordNo, p_correct: correct, p_mode: mode })
         .then(({ data, error }) => {
-          if (error) setError("学習記録を保存できませんでした。通信状況を確認してください。");
+          if (error) setError(`学習記録を保存できませんでした。通信状況を確認してください。（詳細: ${error.code ?? ""} ${error.message}）`);
           else if (data) put(data as WordProgress);
         });
     },
@@ -90,7 +93,7 @@ export default function ProgressProvider({ username, children }: { username: str
     (wordNo: number, weak: boolean) => {
       setProgress((prev) => new Map(prev).set(wordNo, { ...(prev.get(wordNo) ?? empty(wordNo)), is_weak: weak, streak: 0 }));
       supabase.rpc("set_weak", { p_word_no: wordNo, p_weak: weak }).then(({ data, error }) => {
-        if (error) setError("苦手リストを保存できませんでした。通信状況を確認してください。");
+        if (error) setError(`苦手リストを保存できませんでした。通信状況を確認してください。（詳細: ${error.code ?? ""} ${error.message}）`);
         else if (data) put(data as WordProgress);
       });
     },

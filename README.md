@@ -18,7 +18,7 @@
 ### 1. Supabase
 
 1. [Supabase](https://supabase.com) でプロジェクトを作成。
-2. **SQL Editor** で `supabase/migrations/0001_init.sql` の中身を実行（テーブル・RLS・関数を作成）。
+2. **SQL Editor** で `supabase/migrations/0001_init.sql`、続けて `0002_grants.sql` の中身を実行（テーブル・RLS・関数・権限を作成）。
 3. **Authentication → Sign In / Providers → Email** で **「Confirm email」をオフ** にする。
    - Supabase のログインはメールアドレスが必須なので、アプリ内部ではアカウント名から `アカウント名@kobun-tango.local` という実在しないアドレスを作って使っています（メールは送られません）。
    - もし Supabase がこのアドレスを受け付けない場合は、環境変数 `NEXT_PUBLIC_AUTH_EMAIL_DOMAIN` で別のドメインを指定してください。
