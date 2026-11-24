@@ -14,7 +14,7 @@ type Log = { id: number; word_no: number; correct: boolean; mode: string; create
 const MODE_LABEL: Record<string, string> = { card: "カード", quiz: "クイズ", review: "今日の復習" };
 
 export default function WeakPage() {
-  const { progress } = useProgress();
+  const { progress, userId } = useProgress();
   const [logs, setLogs] = useState<Log[] | null>(null);
 
   const weak = useMemo(
@@ -29,11 +29,12 @@ export default function WeakPage() {
     createClient()
       .from("study_logs")
       .select("id,word_no,correct,mode,created_at")
+      .eq("user_id", userId)
       .eq("correct", false)
       .order("created_at", { ascending: false })
       .limit(30)
       .then(({ data }) => setLogs((data as Log[]) ?? []));
-  }, []);
+  }, [userId]);
 
   const ids = weak.map((w) => w.n);
   return (

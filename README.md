@@ -11,6 +11,8 @@
 - **ランダム出題**：既存の区分・セクションを複数選ぶか、番号（例：120〜180）を直接指定して、カード／クイズでランダムに出題。
 - **今日の復習（40問）**：数日前に間違えた単語・苦手リスト・しばらく学習していない単語を優先して約7割、残りは普通の単語を混ぜて出題。
 - **苦手リスト**：間違えた単語は自動で追加。カードで「覚えた」またはクイズで2回連続正解すると外れる。手動でも出し入れ可。
+- **アカウント設定**：アカウント名とパスワードを変更できる（学習記録は引き継ぎ）。
+- **管理者**：管理者アカウントは「管理」画面から全アカウントの進捗・苦手リスト・よく間違える単語・最近の解答を見られる（閲覧のみ）。
 - **学習履歴**：単語ごとに「最後に学習した日時」「最後に正解した日時」「最後に間違えた日時」「正解数・不正解数」を保存。解答1回ごとのログ（study_logs）も保存。
 
 ## セットアップ
@@ -18,9 +20,9 @@
 ### 1. Supabase
 
 1. [Supabase](https://supabase.com) でプロジェクトを作成。
-2. **SQL Editor** で `supabase/migrations/0001_init.sql`、続けて `0002_grants.sql` の中身を実行（テーブル・RLS・関数・権限を作成）。
+2. **SQL Editor** で `supabase/migrations/` の `0001_init.sql` → `0002_grants.sql` → `0003_account_admin.sql` の順に中身を実行（テーブル・RLS・関数・権限・管理者機能を作成）。
 3. **Authentication → Sign In / Providers → Email** で **「Confirm email」をオフ** にする。
-   - Supabase のログインはメールアドレスが必須なので、アプリ内部ではアカウント名から `アカウント名@kobun-tango.local` という実在しないアドレスを作って使っています（メールは送られません）。
+   - Supabase のログインはメールアドレスが必須なので、アプリ内部では `…@kobun-tango.local` という実在しないアドレスを作って使っています（メールは送られません）。ログイン時はアカウント名からこのアドレスを引くので、アカウント名を変えてもログインできます。
    - もし Supabase がこのアドレスを受け付けない場合は、環境変数 `NEXT_PUBLIC_AUTH_EMAIL_DOMAIN` で別のドメインを指定してください。
 4. **Settings → API** から Project URL と anon key を控える。
 
@@ -49,6 +51,8 @@ src/
       study                カード／クイズ（URLパラメータで範囲・出題数などを指定）
       review               今日の復習
       weak                 苦手リスト・間違えた記録
+      account              アカウント名・パスワードの変更、ログアウト
+      admin                管理者用：アカウント一覧・各アカウントの詳細
   components/              FlashCards, Quiz, WordList, ProgressProvider など
   lib/
     words-raw.ts           単語データ（番号|見出し|漢字|品詞|意味;意味…）
@@ -64,8 +68,17 @@ supabase/migrations/       DB スキーマ
 
 | テーブル | 内容 |
 |---|---|
-| `profiles` | アカウント名（サインアップ時に自動作成） |
+| `profiles` | アカウント名・管理者フラグ（サインアップ時に自動作成） |
 | `word_progress` | ユーザー×単語ごとの状態：苦手か、正解数・不正解数、連続正解数、最終学習・最終正解・最終不正解の日時 |
 | `study_logs` | 解答1回ごとの記録（単語・正誤・カード/クイズ/今日の復習・日時） |
 
-どのテーブルも Row Level Security で本人の行しか読み書きできません。解答の記録は `record_answer` 関数で、状態の更新とログの追加を1回で行います。
+どのテーブルも Row Level Security で本人の行しか読み書きできません（管理者は全員分を読み取りのみ可）。
+
+### 管理者の追加・解除
+
+SQL Editor で実行します。
+
+```sql
+update public.profiles set is_admin = true  where username = 'souta';   -- 管理者にする
+update public.profiles set is_admin = false where username = 'souta';   -- 解除する
+```解答の記録は `record_answer` 関数で、状態の更新とログの追加を1回で行います。

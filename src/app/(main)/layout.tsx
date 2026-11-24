@@ -9,8 +9,12 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase.from("profiles").select("username").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("username,is_admin").eq("id", user.id).maybeSingle();
   const username = profile?.username ?? (user.user_metadata?.username as string | undefined) ?? "";
 
-  return <ProgressProvider username={username}>{children}</ProgressProvider>;
+  return (
+    <ProgressProvider userId={user.id} username={username} isAdmin={!!profile?.is_admin}>
+      {children}
+    </ProgressProvider>
+  );
 }

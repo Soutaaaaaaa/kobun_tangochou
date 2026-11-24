@@ -5,7 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { ProgressMap, StudyMode, WordProgress } from "@/lib/progress";
 
 type Ctx = {
+  userId: string;
   username: string;
+  isAdmin: boolean;
   progress: ProgressMap;
   loading: boolean;
   error: string | null;
@@ -47,7 +49,17 @@ function applyLocal(p: WordProgress, correct: boolean, mode: StudyMode): WordPro
   };
 }
 
-export default function ProgressProvider({ username, children }: { username: string; children: React.ReactNode }) {
+export default function ProgressProvider({
+  userId,
+  username,
+  isAdmin,
+  children,
+}: {
+  userId: string;
+  username: string;
+  isAdmin: boolean;
+  children: React.ReactNode;
+}) {
   const supabase = useMemo(() => createClient(), []);
   const [progress, setProgress] = useState<ProgressMap>(new Map());
   const [loading, setLoading] = useState(true);
@@ -58,6 +70,7 @@ export default function ProgressProvider({ username, children }: { username: str
     supabase
       .from("word_progress")
       .select(COLS)
+      .eq("user_id", userId)
       .then(({ data, error }) => {
         if (!alive) return;
         if (error)
@@ -70,7 +83,7 @@ export default function ProgressProvider({ username, children }: { username: str
     return () => {
       alive = false;
     };
-  }, [supabase]);
+  }, [supabase, userId]);
 
   const put = useCallback((row: WordProgress) => {
     setProgress((prev) => new Map(prev).set(row.word_no, row));
@@ -101,8 +114,8 @@ export default function ProgressProvider({ username, children }: { username: str
   );
 
   const value = useMemo(
-    () => ({ username, progress, loading, error, record, setWeak }),
-    [username, progress, loading, error, record, setWeak],
+    () => ({ userId, username, isAdmin, progress, loading, error, record, setWeak }),
+    [userId, username, isAdmin, progress, loading, error, record, setWeak],
   );
 
   return (

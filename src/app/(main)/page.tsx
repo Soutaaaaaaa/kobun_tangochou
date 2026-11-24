@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { logout } from "../auth-actions";
 import AppBar, { Page } from "@/components/AppBar";
 import { useProgress } from "@/components/ProgressProvider";
 import { ago, isKnown } from "@/lib/progress";
@@ -9,7 +8,7 @@ import { REVIEW_SIZE } from "@/lib/review";
 import { CATS, SECTIONS, WORDS, sectionWords } from "@/lib/words";
 
 export default function Home() {
-  const { username, progress, loading } = useProgress();
+  const { username, isAdmin, progress, loading } = useProgress();
   const known = WORDS.filter((w) => isKnown(progress.get(w.n))).length;
   const weak = WORDS.filter((w) => progress.get(w.n)?.is_weak).length;
   const lastStudied = [...progress.values()].reduce<string | null>(
@@ -22,12 +21,24 @@ export default function Home() {
       <AppBar
         title="古文単語400"
         right={
-          <form action={logout} className="flex items-center gap-2 text-[13px] text-muted">
-            <span className="max-w-[9em] truncate" title="ログイン中のアカウント">
-              {username}
-            </span>
-            <button className="rounded-md border border-line px-2 py-1 text-xs font-bold text-ink">ログアウト</button>
-          </form>
+          <div className="flex items-center gap-1.5 text-[13px]">
+            {isAdmin && (
+              <Link href="/admin" className="rounded-md bg-ai-soft px-2 py-1 text-xs font-bold text-ai">
+                管理
+              </Link>
+            )}
+            <Link
+              href="/account"
+              className="flex max-w-[11em] items-center gap-1 rounded-md border border-line px-2 py-1 text-xs font-bold"
+              title="アカウント設定"
+            >
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c0-4 4-6 8-6s8 2 8 6" strokeLinecap="round" />
+              </svg>
+              <span className="truncate">{username}</span>
+            </Link>
+          </div>
         }
       />
       <Page>
