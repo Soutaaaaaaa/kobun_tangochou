@@ -25,6 +25,34 @@ export default function FlashCards({ words, title, quizHref }: Props) {
   const stampOk = useRef<HTMLDivElement>(null);
   const stampNg = useRef<HTMLDivElement>(null);
   const drag = useRef({ active: false, sx: 0, dx: 0, t0: 0 });
+  const stageRef = useRef<HTMLDivElement>(null);
+
+  // ブラウザの「スワイプで戻る」を抑える。
+  // React のタッチイベントは passive なので preventDefault が効かない → ネイティブで登録する。
+  useEffect(() => {
+    const stage = stageRef.current;
+    // カードの上でのスワイプは、ページのスクロールや戻る操作に渡さない
+    const onStageTouch = (e: TouchEvent) => {
+      if (e.cancelable) e.preventDefault();
+    };
+    // 画面の左右の端から始まるスワイプ（iPhone の Safari などの「戻る」操作）を止める
+    const EDGE = 28;
+    const onEdgeTouch = (e: TouchEvent) => {
+      // ボタンやリンクのタップは邪魔しない
+      if ((e.target as Element | null)?.closest?.("button, a, input, label, select, textarea")) return;
+      const x = e.touches[0]?.clientX ?? 0;
+      if (e.cancelable && (x < EDGE || x > window.innerWidth - EDGE)) e.preventDefault();
+    };
+    if (!stage) return; // 結果画面では何もしない
+    stage.addEventListener("touchstart", onStageTouch, { passive: false });
+    stage.addEventListener("touchmove", onStageTouch, { passive: false });
+    document.addEventListener("touchstart", onEdgeTouch, { passive: false });
+    return () => {
+      stage.removeEventListener("touchstart", onStageTouch);
+      stage.removeEventListener("touchmove", onStageTouch);
+      document.removeEventListener("touchstart", onEdgeTouch);
+    };
+  }, [i, deck]);
 
   const restart = (list: Word[]) => {
     setDeck(list);
@@ -195,7 +223,7 @@ export default function FlashCards({ words, title, quizHref }: Props) {
         </div>
       </div>
 
-      <div className="relative h-[min(56vh,440px)] min-h-[330px] [perspective:1200px]">
+      <div ref={stageRef} className="relative h-[min(56vh,440px)] min-h-[330px] touch-none overscroll-x-none [perspective:1200px]">
         {next && (
           <div className="pointer-events-none absolute inset-0 translate-y-2.5 scale-95 rounded-[18px] border border-line bg-surface opacity-70 shadow-card" />
         )}

@@ -20,7 +20,11 @@
   }
 }
 
-html, body { min-height: 100%; }
+html, body {
+  min-height: 100%;
+  /* 横スワイプ・トラックパッドの横スクロールで「前のページに戻る」が起きないようにする（Chrome / Edge / Firefox / Android） */
+  overscroll-behavior-x: none;
+}
 body {
   background: var(--bg);
   color: var(--ink);
