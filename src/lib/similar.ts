@@ -1,5 +1,6 @@
 import { OWN } from "./distractors";
 import { ALL_WORDS, BOOK_WORDS, type Word } from "./words";
+import { NEAR_RAW } from "./near-raw";
 
 /**
  * 似た意味の単語。
@@ -11,7 +12,33 @@ import { ALL_WORDS, BOOK_WORDS, type Word } from "./words";
 const keys = (w: Word) => w.word.split("・");
 const plain = (t: string) => t.replace(/\*$/, "");
 
-function score(a: Word, b: Word): { s: number; shared: string[] } {
+/* 意味が近い単語のまとまり（near-raw.ts） */
+const isKeigo = (w: Word) => w.pos.startsWith("敬") || w.means.some((m) => /^\[(尊|謙|丁)/.test(m));
+const NEAR = NEAR_RAW.trim()
+  .split("\n")
+  .map((line) => {
+    const [title, list] = line.split("|");
+    return { title, keys: list.split(" ") };
+  });
+/** 単語ごとに、入っているまとまりの番号 */
+const NEAR_OF = new Map<number, Set<number>>();
+for (const w of ALL_WORDS) {
+  if (w.extra) continue;
+  const set = new Set<number>();
+  NEAR.forEach((g, i) => {
+    for (const k of g.keys) {
+      const [r, cond] = k.split("@");
+      if (!keys(w).includes(r)) continue;
+      if (cond === "敬" && !isKeigo(w)) continue;
+      if (cond === "-敬" && isKeigo(w)) continue;
+      if (cond && cond !== "敬" && cond !== "-敬" && !w.pos.startsWith(cond)) continue;
+      set.add(i);
+    }
+  });
+  NEAR_OF.set(w.n, set);
+}
+
+function score(a: Word, b: Word): { s: number; shared: string[]; near: string[] } {
   const A = OWN.get(a.n)!;
   const B = OWN.get(b.n)!;
   const shared = new Set<string>();
@@ -41,16 +68,21 @@ function score(a: Word, b: Word): { s: number; shared: string[] } {
         }
       }
   }
-  return { s, shared: [...shared] };
+  // 訳語の言葉が違っても、意味が近いまとまりに一緒に入っている
+  const near: string[] = [];
+  for (const i of NEAR_OF.get(a.n) ?? []) if (NEAR_OF.get(b.n)?.has(i)) near.push(NEAR[i].title);
+  s += near.length * 2.5;
+  return { s, shared: [...shared], near };
 }
 
-const CACHE = new Map<number, { word: Word; shared: string[] }[]>();
+export type Similar = { word: Word; shared: string[]; near: string[] };
+const CACHE = new Map<number, Similar[]>();
 
-export function similarWords(w: Word, max = 6): { word: Word; shared: string[] }[] {
+export function similarWords(w: Word, max = 6): Similar[] {
   if (CACHE.has(w.n)) return CACHE.get(w.n)!;
   // おまけは同じグループの言葉を出す
   if (w.extra) {
-    const out = BOOK_WORDS[w.book].filter((o) => o.group === w.group && o.n !== w.n).slice(0, 8).map((o) => ({ word: o, shared: [] }));
+    const out = BOOK_WORDS[w.book].filter((o) => o.group === w.group && o.n !== w.n).slice(0, 8).map((o) => ({ word: o, shared: [], near: [] }));
     CACHE.set(w.n, out);
     return out;
   }
@@ -62,7 +94,7 @@ export function similarWords(w: Word, max = 6): { word: Word; shared: string[] }
     // 両方の単語帳にある語（いたし など）は一つだけ出す
     .filter((x, i, a) => a.findIndex((y) => keys(y.word).some((k) => keys(x.word).includes(k))) === i)
     .slice(0, max)
-    .map(({ word, shared }) => ({ word, shared }));
+    .map(({ word, shared, near }) => ({ word, shared, near }));
   CACHE.set(w.n, out);
   return out;
 }
