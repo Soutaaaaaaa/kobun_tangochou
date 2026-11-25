@@ -14,7 +14,20 @@ function meanTokens(w: Word): Set<string> {
   }
   return set;
 }
-const TOK = new Map(WORDS.map((w) => [w.n, meanTokens(w)]));
+/*
+ * 同じ読みの語（きこゆ＝聞こえる／申し上げる など）は、問題では区別できないので
+ * 意味をまとめて扱う。きこゆ（聞こえる）の問題に きこえさす（申し上げる）が
+ * 誤答として出ると、どちらも正しく見えてしまうため。
+ */
+const OWN = new Map(WORDS.map((w) => [w.n, meanTokens(w)]));
+const TOK = new Map(
+  WORDS.map((w) => {
+    const set = new Set<string>();
+    for (const o of WORDS)
+      if (o.word.split("・").some((k) => w.word.split("・").includes(k))) OWN.get(o.n)!.forEach((t) => set.add(t));
+    return [w.n, set];
+  }),
+);
 export function conflicts(a: Word, b: Word): boolean {
   const A = TOK.get(a.n)!;
   for (const t of TOK.get(b.n)!) if (A.has(t)) return true;
