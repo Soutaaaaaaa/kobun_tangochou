@@ -1,5 +1,5 @@
 # supabase/migrations/ に SQL が追加されたら、Supabase に自動で実行する。
-# 必要な GitHub Secrets: SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD
+# 必要な GitHub Secrets: SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD（パスワードは環境変数から自動で読まれる）
 name: Supabase の SQL を実行
 
 on:
@@ -30,15 +30,15 @@ jobs:
           version: latest
 
       - name: プロジェクトにつなぐ
-        run: supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+        run: supabase link --project-ref "$PROJECT_REF"
 
       # 0001〜0005 は手で実行済みなので「実行済み」として記録する（何度やっても同じ結果になる）。
       # 0006 以降はここに入れない（まだ実行していなければ、次の db push で実行される）。
       - name: 手で実行済みの SQL を記録
-        run: supabase migration repair --status applied 0001 0002 0003 0004 0005 --password "$SUPABASE_DB_PASSWORD"
+        run: supabase migration repair --status applied 0001 0002 0003 0004 0005 --remote
 
       - name: まだ実行していない SQL を一覧
-        run: supabase migration list --password "$SUPABASE_DB_PASSWORD"
+        run: supabase migration list --remote
 
       - name: まだ実行していない SQL を実行
-        run: supabase db push --password "$SUPABASE_DB_PASSWORD" --yes
+        run: supabase db push --remote --yes
