@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { distractors, type QuizDir } from "@/lib/distractors";
 import type { StudyMode } from "@/lib/progress";
-import { catOf, homographHint, shuffle, type Word } from "@/lib/words";
+import { clearSession, saveSession, type QuizSave } from "@/lib/session-store";
+import { BYNUM, catOf, homographHint, shuffle, type Word } from "@/lib/words";
 import { InlineMeans, QuizMean, ShortMean } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
@@ -18,24 +19,39 @@ type Props = {
   recordMode: Exclude<StudyMode, "card">;
   /** 結果画面の追加ボタン */
   footer?: React.ReactNode;
+  /** 中断・再開用の保存キー（なければ保存しない） */
+  saveKey?: string;
+  saveHref?: string;
+  /** 前回中断したところから再開する */
+  resume?: QuizSave;
 };
 
 type Question = { item: QuizItem; dir: QuizDir; choices: Word[] };
 
-const makeQuestions = (items: QuizItem[], format: QuizFormat): Question[] =>
-  items.map((item) => {
-    const dir: QuizDir = format === "mix" ? (Math.random() < 0.5 ? "w2m" : "m2w") : format;
+const makeQuestions = (items: QuizItem[], format: QuizFormat, dirs?: QuizDir[]): Question[] =>
+  items.map((item, k) => {
+    const dir: QuizDir = dirs?.[k] ?? (format === "mix" ? (Math.random() < 0.5 ? "w2m" : "m2w") : format);
     return { item, dir, choices: shuffle([item.word, ...distractors(item.word, dir)]) };
   });
 
-export default function Quiz({ items, format, title, recordMode, footer }: Props) {
+const fromSave = (r: QuizSave): QuizItem[] =>
+  r.items.flatMap((x) => {
+    const word = BYNUM.get(x.n);
+    return word ? [{ word, reason: x.reason, kind: x.k }] : [];
+  });
+
+export default function Quiz({ items, format, title, recordMode, footer, saveKey, saveHref, resume }: Props) {
   const { record } = useProgress();
-  const [source, setSource] = useState(items);
-  const questions = useMemo(() => makeQuestions(source, format), [source, format]);
-  const [i, setI] = useState(0);
+  const [source, setSource] = useState(() => (resume ? fromSave(resume) : items));
+  const [dirs, setDirs] = useState<QuizDir[] | undefined>(resume?.dirs);
+  const questions = useMemo(() => makeQuestions(source, format, dirs), [source, format, dirs]);
+  const [i, setI] = useState(resume?.i ?? 0);
   const [picked, setPicked] = useState<number | null>(null);
-  const [score, setScore] = useState(0);
-  const [missed, setMissed] = useState<QuizItem[]>([]);
+  const [score, setScore] = useState(resume?.score ?? 0);
+  const [missed, setMissed] = useState<QuizItem[]>(() =>
+    resume ? resume.missed.flatMap((n) => fromSave(resume).filter((x) => x.word.n === n).slice(0, 1)) : [],
+  );
+  const [paused, setPaused] = useState(false);
   const nextRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -44,12 +60,52 @@ export default function Quiz({ items, format, title, recordMode, footer }: Props
 
   const restart = (list: QuizItem[]) => {
     setSource(shuffle(list));
+    setDirs(undefined);
+    setPaused(false);
+    if (saveKey) clearSession(saveKey);
     setI(0);
     setPicked(null);
     setScore(0);
     setMissed([]);
     window.scrollTo(0, 0);
   };
+
+  /* ---------- 中断 ---------- */
+  if (paused && i < questions.length) {
+    const done = picked !== null ? i + 1 : i;
+    return (
+      <div className="flex flex-col gap-4">
+        <section className="panel grid gap-1.5 px-4 py-6 text-center">
+          <p className="text-sm text-muted">{title}（中断中）</p>
+          <div className="font-word text-5xl font-black tabular-nums">
+            {score}
+            <small className="text-xl text-muted"> / {done}</small>
+          </div>
+          <p className="text-sm text-muted">
+            全 {questions.length} 問中 {done} 問まで解答
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            ここまでの記録は保存されています。{saveKey && "トップ画面の「中断中の学習」からも続きを再開できます。"}
+          </p>
+        </section>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            if (picked !== null) {
+              setPicked(null);
+              setI((x) => x + 1);
+            }
+            setPaused(false);
+          }}
+        >
+          続きから再開（{done + 1}問目から）
+        </button>
+        <Link className="btn" href="/">
+          トップへ
+        </Link>
+      </div>
+    );
+  }
 
   /* ---------- 結果 ---------- */
   if (i >= questions.length) {
@@ -117,8 +173,22 @@ export default function Quiz({ items, format, title, recordMode, footer }: Props
     setPicked(n);
     const ok = n === t.n;
     record(t.n, ok, recordMode);
-    if (ok) setScore((s) => s + 1);
-    else setMissed((m) => [...m, q.item]);
+    const nextScore = score + (ok ? 1 : 0);
+    const nextMissed = ok ? missed : [...missed, q.item];
+    setScore(nextScore);
+    setMissed(nextMissed);
+    if (saveKey)
+      saveSession(saveKey, {
+        kind: "quiz",
+        title,
+        href: saveHref ?? "/",
+        i: i + 1,
+        total: questions.length,
+        items: questions.map((x) => ({ n: x.item.word.n, reason: x.item.reason, k: x.item.kind })),
+        dirs: questions.map((x) => x.dir),
+        score: nextScore,
+        missed: nextMissed.map((x) => x.word.n),
+      });
   };
   const next = () => {
     setPicked(null);
@@ -133,7 +203,18 @@ export default function Quiz({ items, format, title, recordMode, footer }: Props
           <span>
             {i + 1} / {questions.length}
           </span>
-          <span className="font-bold text-take">正解 {score}</span>
+          <span className="flex items-center gap-3">
+            <span className="font-bold text-take">正解 {score}</span>
+            <button
+              onClick={() => {
+                setPaused(true);
+                window.scrollTo(0, 0);
+              }}
+              className="rounded-md border border-line px-2 py-0.5 text-xs font-bold text-ink"
+            >
+              中断
+            </button>
+          </span>
         </div>
         <div className="meter">
           <i style={{ width: `${(i / questions.length) * 100}%`, background: "var(--ai)" }} />

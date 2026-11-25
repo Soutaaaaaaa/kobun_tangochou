@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import AppBar, { Page } from "@/components/AppBar";
 import { useProgress } from "@/components/ProgressProvider";
 import StreakCard from "@/components/StreakCard";
 import { ago, isKnown } from "@/lib/progress";
 import { REVIEW_SIZE } from "@/lib/review";
+import { clearSession, listSessions } from "@/lib/session-store";
 import { CATS, SECTIONS, WORDS, sectionWords } from "@/lib/words";
 
 export default function Home() {
   const { username, isAdmin, progress, loading } = useProgress();
+  const [paused, setPaused] = useState<ReturnType<typeof listSessions>>([]);
+  useEffect(() => setPaused(listSessions()), []);
   const known = WORDS.filter((w) => isKnown(progress.get(w.n))).length;
   const weak = WORDS.filter((w) => progress.get(w.n)?.is_weak).length;
   const lastStudied = [...progress.values()].reduce<string | null>(
@@ -44,6 +48,38 @@ export default function Home() {
       />
       <Page>
         <StreakCard />
+        {paused.length > 0 && (
+          <section className="grid gap-1.5">
+            <h2 className="px-0.5 text-[13px] font-bold text-muted">中断中の学習</h2>
+            <div className="panel overflow-hidden">
+              {paused.map((s) => (
+                <div key={s.key} className="flex items-center gap-2 border-t border-line px-3.5 py-2.5 first:border-t-0">
+                  <Link href={s.href} className="grid min-w-0 flex-1 gap-0.5">
+                    <span className="truncate text-sm font-bold">{s.title}</span>
+                    <span className="text-xs tabular-nums text-muted">
+                      {s.kind === "cards" ? "単語カード" : "クイズ"}・{s.i} / {s.total}
+                      {s.kind === "quiz" && `・正解 ${s.score}`}
+                    </span>
+                  </Link>
+                  <Link href={s.href} className="btn min-h-0 px-3 py-1.5 text-xs">
+                    続きから
+                  </Link>
+                  <button
+                    aria-label="破棄"
+                    title="破棄する"
+                    className="px-1.5 text-lg leading-none text-muted"
+                    onClick={() => {
+                      clearSession(s.key);
+                      setPaused(listSessions());
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
         <section className="panel grid gap-3 p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div className="font-word text-[34px] font-black leading-none tabular-nums">

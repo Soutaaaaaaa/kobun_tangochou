@@ -19,7 +19,7 @@ function meanTokens(w: Word): Set<string> {
  * 意味をまとめて扱う。きこゆ（聞こえる）の問題に きこえさす（申し上げる）が
  * 誤答として出ると、どちらも正しく見えてしまうため。
  */
-const OWN = new Map(WORDS.map((w) => [w.n, meanTokens(w)]));
+export const OWN = new Map(WORDS.map((w) => [w.n, meanTokens(w)]));
 const TOK = new Map(
   WORDS.map((w) => {
     const set = new Set<string>();
