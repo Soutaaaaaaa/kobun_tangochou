@@ -8,6 +8,9 @@
   --ai: #264579; --ai-soft: #e3e9f4; --shu: #c4412d; --shu-soft: #f8e4df; --take: #2f7a4a; --take-soft: #e0f0e5;
   --c1: #264579; --c2: #6a4a8c; --c3: #94661a; --c4: #2c706b;
   --shadow: 0 1px 2px rgba(20,30,60,.06), 0 8px 24px rgba(20,30,60,.08);
+  --flame-1: #e8431c; --flame-2: #ff9a1f; --flame-3: #ffb13b; --flame-4: #ffe27a;
+  --flame-off-1: #c9cfdb; --flame-off-2: #dde2ea; --flame-off-3: #eef1f6;
+  --heat-1: #fde3c8; --heat-2: #fbb877; --heat-3: #f2852e; --heat-4: #d9561a;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -16,6 +19,8 @@
     --ai: #86a5dc; --ai-soft: #222c3e; --shu: #ec7a65; --shu-soft: #3a2320; --take: #79bf8f; --take-soft: #1d3326;
     --c1: #86a5dc; --c2: #b398d6; --c3: #d6aa5c; --c4: #6cc0b8;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --flame-off-1: #3a4252; --flame-off-2: #4a5365; --flame-off-3: #5a6478;
+    --heat-1: #4a2a17; --heat-2: #7a3d17; --heat-3: #b85a1c; --heat-4: #f07a2a;
     color-scheme: dark;
   }
 }
@@ -50,6 +55,13 @@ button:disabled { cursor: default; }
   .seg-btn { @apply rounded-full border-[1.5px] border-line bg-surface px-3.5 py-1.5 text-[13px] font-medium; }
   .seg-btn[aria-pressed="true"] { @apply border-ai bg-ai-soft font-bold text-ai; }
 }
+
+@keyframes flame-flicker {
+  0%, 100% { transform: scale(1, 1) skewX(0deg); }
+  30% { transform: scale(1.02, 0.97) skewX(-1.5deg); }
+  60% { transform: scale(0.98, 1.03) skewX(1.5deg); }
+}
+.flame-flicker { transform-origin: 50% 100%; animation: flame-flicker 1.8s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }

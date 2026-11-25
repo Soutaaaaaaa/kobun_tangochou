@@ -3,12 +3,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { ProgressMap, StudyMode, WordProgress } from "@/lib/progress";
+import { dayKey, type DayMap } from "@/lib/streak";
 
 type Ctx = {
   userId: string;
   username: string;
   isAdmin: boolean;
   progress: ProgressMap;
+  /** 日ごとの学習数（カレンダー・連続日数）。読み込み前は null */
+  days: DayMap | null;
   loading: boolean;
   error: string | null;
   record: (wordNo: number, correct: boolean, mode: StudyMode) => void;
@@ -63,6 +66,16 @@ export default function ProgressProvider({
   const supabase = useMemo(() => createClient(), []);
   const [progress, setProgress] = useState<ProgressMap>(new Map());
   const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState<DayMap | null>(null);
+
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Tokyo";
+    supabase.rpc("study_days", { p_tz: tz }).then(({ data, error }) => {
+      // 0005 の SQL が未実行でも他の機能は動くよう、失敗時は空のまま
+      const rows = error ? [] : ((data ?? []) as { day: string; answers: number; wrong: number }[]);
+      setDays(new Map(rows.map((r) => [r.day, { answers: r.answers, wrong: r.wrong }])));
+    });
+  }, [supabase]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -92,6 +105,13 @@ export default function ProgressProvider({
   const record = useCallback(
     (wordNo: number, correct: boolean, mode: StudyMode) => {
       setProgress((prev) => new Map(prev).set(wordNo, applyLocal(prev.get(wordNo) ?? empty(wordNo), correct)));
+      setDays((prev) => {
+        const next = new Map(prev ?? []);
+        const k = dayKey();
+        const cur = next.get(k) ?? { answers: 0, wrong: 0 };
+        next.set(k, { answers: cur.answers + 1, wrong: cur.wrong + (correct ? 0 : 1) });
+        return next;
+      });
       supabase
         .rpc("record_answer", { p_word_no: wordNo, p_correct: correct, p_mode: mode })
         .then(({ data, error }) => {
@@ -114,8 +134,8 @@ export default function ProgressProvider({
   );
 
   const value = useMemo(
-    () => ({ userId, username, isAdmin, progress, loading, error, record, setWeak }),
-    [userId, username, isAdmin, progress, loading, error, record, setWeak],
+    () => ({ userId, username, isAdmin, progress, days, loading, error, record, setWeak }),
+    [userId, username, isAdmin, progress, days, loading, error, record, setWeak],
   );
 
   return (

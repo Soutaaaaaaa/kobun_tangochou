@@ -3,6 +3,7 @@
 import Link from "next/link";
 import AppBar, { Page } from "@/components/AppBar";
 import { useProgress } from "@/components/ProgressProvider";
+import StreakCard from "@/components/StreakCard";
 import { ago, isKnown } from "@/lib/progress";
 import { REVIEW_SIZE } from "@/lib/review";
 import { CATS, SECTIONS, WORDS, sectionWords } from "@/lib/words";
@@ -42,6 +43,7 @@ export default function Home() {
         }
       />
       <Page>
+        <StreakCard />
         <section className="panel grid gap-3 p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div className="font-word text-[34px] font-black leading-none tabular-nums">
