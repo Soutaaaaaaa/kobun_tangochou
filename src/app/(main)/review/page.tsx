@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AppBar, { Page } from "@/components/AppBar";
+import FlashCards from "@/components/FlashCards";
 import { useProgress } from "@/components/ProgressProvider";
 import Quiz, { type QuizFormat, type QuizItem } from "@/components/Quiz";
 import { REVIEW_SIZE, buildTodayReview } from "@/lib/review";
@@ -9,7 +10,7 @@ import { REVIEW_SIZE, buildTodayReview } from "@/lib/review";
 export default function ReviewPage() {
   const { progress, loading } = useProgress();
   const [items, setItems] = useState<QuizItem[] | null>(null);
-  const [format, setFormat] = useState<QuizFormat>("mix");
+  const [format, setFormat] = useState<QuizFormat | "cards">("mix");
   const [started, setStarted] = useState(false);
 
   // 学習記録が読み込まれたら一度だけ組み立てる
@@ -25,6 +26,18 @@ export default function ReviewPage() {
       }, {})
     : {};
   const priority = items?.filter((x) => x.kind === "priority").length ?? 0;
+  const newSet = (
+    <button
+      className="btn"
+      onClick={() => {
+        setItems(buildTodayReview(progress, REVIEW_SIZE));
+        setStarted(false);
+        window.scrollTo(0, 0);
+      }}
+    >
+      新しい{REVIEW_SIZE}問を作る
+    </button>
+  );
 
   return (
     <>
@@ -55,14 +68,15 @@ export default function ReviewPage() {
                 ))}
             </ul>
             <div>
-              <h3 className="mb-1.5 text-[13px] text-muted">クイズの形式</h3>
+              <h3 className="mb-1.5 text-[13px] text-muted">出題の形式</h3>
               <div className="flex flex-wrap gap-1.5">
                 {(
                   [
-                    ["mix", "ミックス"],
-                    ["w2m", "古語 → 意味"],
-                    ["m2w", "意味 → 古語"],
-                  ] as [QuizFormat, string][]
+                    ["mix", "クイズ（ミックス）"],
+                    ["w2m", "クイズ（古語 → 意味）"],
+                    ["m2w", "クイズ（意味 → 古語）"],
+                    ["cards", "単語カード"],
+                  ] as [QuizFormat | "cards", string][]
                 ).map(([v, l]) => (
                   <button key={v} className="seg-btn" aria-pressed={format === v} onClick={() => setFormat(v)}>
                     {l}
@@ -79,24 +93,16 @@ export default function ReviewPage() {
               </p>
             )}
           </section>
-        ) : (
-          <Quiz
-            items={items}
-            format={format}
+        ) : format === "cards" ? (
+          <FlashCards
+            words={items.map((x) => x.word)}
             title="今日の復習"
             recordMode="review"
-            footer={
-              <button
-                className="btn"
-                onClick={() => {
-                  setItems(buildTodayReview(progress, REVIEW_SIZE));
-                  setStarted(false);
-                }}
-              >
-                新しい{REVIEW_SIZE}問を作る
-              </button>
-            }
+            badges={Object.fromEntries(items.map((x) => [x.word.n, { text: x.reason ?? "", priority: x.kind === "priority" }]))}
+            footer={newSet}
           />
+        ) : (
+          <Quiz items={items} format={format} title="今日の復習" recordMode="review" footer={newSet} />
         )}
       </Page>
     </>

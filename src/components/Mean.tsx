@@ -1,3 +1,4 @@
+import { quizMeans } from "@/lib/quiz-mean";
 import { CIRC, splitMean, type Word } from "@/lib/words";
 
 export function MeanText({ m }: { m: string }) {
@@ -44,6 +45,20 @@ export function InlineMeans({ w }: { w: Word }) {
       {w.means.map((m, i) => (
         <span key={i} className="mr-3 inline">
           {w.means.length > 1 && CIRC[i]}
+          <MeanText m={m} />
+        </span>
+      ))}
+    </>
+  );
+}
+
+/** クイズ用：答えのヒントになる部分を伏せた短い意味 */
+export function QuizMean({ w }: { w: Word }) {
+  return (
+    <>
+      {quizMeans(w).map((m, i) => (
+        <span key={i}>
+          {i > 0 && <span className="font-normal text-muted">／</span>}
           <MeanText m={m} />
         </span>
       ))}

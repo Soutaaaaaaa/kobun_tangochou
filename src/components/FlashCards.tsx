@@ -2,18 +2,29 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { StudyMode } from "@/lib/progress";
 import { CIRC, catOf, type Word } from "@/lib/words";
 import { InlineMeans, MeanText } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
-type Props = { words: Word[]; title: string; quizHref?: string };
+type Props = {
+  words: Word[];
+  title: string;
+  quizHref?: string;
+  /** 記録の種類（今日の復習では "review"） */
+  recordMode?: StudyMode;
+  /** カードの表に出す出題理由（今日の復習用）。キーは単語番号 */
+  badges?: Record<number, { text: string; priority: boolean }>;
+  /** 結果画面に足すボタン */
+  footer?: React.ReactNode;
+};
 
 /**
  * 単語カード。
  * めくる前: フリック（またはタップ）でめくる。
  * めくった後: 合っていたら左、間違えたら右へフリック。
  */
-export default function FlashCards({ words, title, quizHref }: Props) {
+export default function FlashCards({ words, title, quizHref, recordMode = "card", badges, footer }: Props) {
   const { record } = useProgress();
   const [deck, setDeck] = useState(words);
   const [i, setI] = useState(0);
@@ -73,7 +84,7 @@ export default function FlashCards({ words, title, quizHref }: Props) {
       const w = deck[i];
       if (!w) return;
       busy.current = true;
-      record(w.n, isOk, "card");
+      record(w.n, isOk, recordMode);
       (isOk ? setOk : setNg)((l) => [...l, w]);
       const el = cardRef.current;
       if (el) {
@@ -90,7 +101,7 @@ export default function FlashCards({ words, title, quizHref }: Props) {
         busy.current = false;
       }, 260);
     },
-    [deck, i, flipped, record],
+    [deck, i, flipped, record, recordMode],
   );
 
   // カードが替わったら位置をリセット
@@ -178,6 +189,7 @@ export default function FlashCards({ words, title, quizHref }: Props) {
             最初からもう一度
           </button>
         </div>
+        {footer}
         {quizHref && (
           <Link className="btn" href={quizHref}>
             この範囲の四択クイズへ
@@ -254,6 +266,15 @@ export default function FlashCards({ words, title, quizHref }: Props) {
                 <span>{c.name}</span>
                 <span>No.{w.n}</span>
               </div>
+              {badges?.[w.n] && (
+                <span
+                  className={`mt-2 self-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                    badges[w.n].priority ? "bg-shu-soft text-shu" : "bg-surface-2 text-muted"
+                  }`}
+                >
+                  {badges[w.n].text}
+                </span>
+              )}
               <div className="flex flex-1 flex-col items-center justify-center gap-2.5 text-center">
                 <b className="break-all font-word text-[clamp(34px,11vw,52px)] font-black leading-tight tracking-wider">{w.word}</b>
                 {w.kanji && <span className="text-[15px] text-muted">{w.kanji}</span>}

@@ -8,6 +8,8 @@ function meanTokens(w: Word): Set<string> {
     for (let t of plainMean(m).replace(/（[^）]*）/g, "").split(/[・、,（）「」]/)) {
       t = t.trim().replace(/^〜/, "");
       if (t.length >= 2) set.add(t);
+      // 活用違い（甚だしい／甚だしく）も同じ意味として扱う
+      if (t.length >= 3 && /[ぁ-ん]$/.test(t)) set.add(t.slice(0, -1) + "*");
     }
   }
   return set;
@@ -69,7 +71,8 @@ export function distractors(t: Word, dir: QuizDir): Word[] {
   const scored: [number, Word][] = [];
   for (const c of WORDS) {
     if (c.n === t.n || conflicts(t, c)) continue;
-    if (dir === "m2w" && keysOf(c).some((k) => keysOf(t).includes(k))) continue; // 同じ見た目の選択肢は出さない
+    // 同じ読みの別の語（おほす＝命じる／おっしゃる など）は、どちらの形式でも選択肢に出さない
+    if (keysOf(c).some((k) => keysOf(t).includes(k))) continue;
     const ck = keysOf(c)[0];
     let s = Math.random() * 2;
     for (const g of groupsOf(c)) if (tg.has(g)) s += 7;
@@ -87,12 +90,14 @@ export function distractors(t: Word, dir: QuizDir): Word[] {
   }
   scored.sort((a, b) => b[0] - a[0]);
   const out: Word[] = [];
+  const sameKey = (a: Word, b: Word) => keysOf(a).some((k) => keysOf(b).includes(k));
   for (const c of shuffle(scored.slice(0, 7).map((x) => x[1]))) {
-    if (out.every((o) => !conflicts(o, c))) out.push(c);
+    if (out.every((o) => !conflicts(o, c) && !sameKey(o, c))) out.push(c);
     if (out.length === 3) break;
   }
   for (const [, c] of scored) {
     if (out.length === 3) break;
+    if (keysOf(c).some((k) => out.some((o) => keysOf(o).includes(k)))) continue;
     if (!out.includes(c) && out.every((o) => !conflicts(o, c))) out.push(c);
   }
   return out;

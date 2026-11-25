@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { distractors, type QuizDir } from "@/lib/distractors";
 import type { StudyMode } from "@/lib/progress";
 import { catOf, shuffle, type Word } from "@/lib/words";
-import { InlineMeans, ShortMean } from "./Mean";
+import { InlineMeans, QuizMean, ShortMean } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
 export type QuizFormat = "mix" | QuizDir;
@@ -161,7 +161,7 @@ export default function Quiz({ items, format, title, recordMode, footer }: Props
           <>
             <span className="text-xs text-muted">この意味をもつ古語は？</span>
             <div className="text-[17px] font-bold leading-relaxed text-shu">
-              <ShortMean w={t} />
+              <QuizMean w={t} />
             </div>
           </>
         )}
@@ -180,7 +180,7 @@ export default function Quiz({ items, format, title, recordMode, footer }: Props
             >
               <span className="font-bold tabular-nums text-muted">{"ABCD"[k]}</span>
               <span className={q.dir === "m2w" ? "font-word text-xl font-black" : "text-[15px] leading-normal"}>
-                {q.dir === "w2m" ? <ShortMean w={o} /> : o.word}
+                {q.dir === "w2m" ? <QuizMean w={o} /> : o.word}
                 {answered && (
                   <span className="mt-1 block font-body text-xs font-normal text-muted">
                     {q.dir === "w2m" ? (
