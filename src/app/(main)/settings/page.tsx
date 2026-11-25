@@ -19,7 +19,7 @@ export default function SettingsPage() {
           <label className="flex cursor-pointer items-start justify-between gap-4">
             <span className="grid gap-0.5 text-sm">
               <span className="font-medium">覚え方のコツを表示</span>
-              <span className="text-xs text-muted">単語カードで「まだ」にした単語や、クイズで間違えた単語に、語源や見分け方などのコツを小さく表示します。</span>
+              <span className="text-xs text-muted">単語カードをめくったときと、クイズで間違えたときに、語源や見分け方などのコツを表示します。</span>
             </span>
             <input
               type="checkbox"

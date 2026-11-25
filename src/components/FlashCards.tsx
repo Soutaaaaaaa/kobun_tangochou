@@ -7,6 +7,7 @@ import { clearSession, saveSession, type CardSave } from "@/lib/session-store";
 import { useSettings } from "@/lib/settings";
 import { similarWords } from "@/lib/similar";
 import { TIPS } from "@/lib/tips";
+import TipBox from "./TipBox";
 import { BYNUM, CIRC, catOf, homographHint, type Word } from "@/lib/words";
 import { InlineMeans, MeanText } from "./Mean";
 import { useProgress } from "./ProgressProvider";
@@ -39,8 +40,6 @@ const toWords = (ns: number[]) => ns.map((n) => BYNUM.get(n)).filter((w): w is W
 export default function FlashCards({ words, title, quizHref, recordMode = "card", badges, footer, saveKey, saveHref, resume }: Props) {
   const { record } = useProgress();
   const [{ showTips }] = useSettings();
-  /** 直前に「まだ」にした語（覚え方のコツを出す） */
-  const [missed, setMissed] = useState<Word | null>(null);
   const [deck, setDeck] = useState(() => (resume ? toWords(resume.words) : words));
   const [i, setI] = useState(resume?.i ?? 0);
   const [flipped, setFlipped] = useState(false);
@@ -106,7 +105,6 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
     setOk([]);
     setNg([]);
     setFlipped(false);
-    setMissed(null);
     setPaused(false);
     busy.current = false;
     if (saveKey) clearSession(saveKey);
@@ -131,7 +129,6 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
       const nextNg = isOk ? ng : [...ng, w];
       setOk(nextOk);
       setNg(nextNg);
-      setMissed(isOk ? null : w);
       if (saveKey)
         saveSession(saveKey, {
           kind: "cards",
@@ -319,7 +316,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                   <div className="mt-0.5 text-[13px] text-muted">
                     <InlineMeans w={w} />
                   </div>
-                  {showTips && TIPS.get(w.n) && <p className="mt-1 text-[11.5px] leading-relaxed text-muted">コツ：{TIPS.get(w.n)}</p>}
+                  {showTips && TIPS.get(w.n) && <p className="mt-1.5 rounded-lg bg-ai-soft px-2.5 py-1.5 text-[13px] leading-relaxed text-ink"><b className="mr-1 text-ai">コツ</b>{TIPS.get(w.n)}</p>}
                 </div>
               ))}
             </div>
@@ -416,7 +413,9 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                   {w.pos}
                 </small>
               </div>
-              <ol className="mt-3 grid flex-1 content-start gap-2.5 overflow-y-auto">
+              {/* 意味が長いときはカードの中でスクロール */}
+              <div className="mt-3 flex flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
+              <ol className="grid content-start gap-2.5">
                 {w.means.map((m, k) => (
                   <li key={k} className="grid grid-cols-[1.4em_1fr] gap-1 text-base font-medium leading-normal text-shu">
                     <span>{w.means.length > 1 ? CIRC[k] : "・"}</span>
@@ -426,24 +425,15 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                   </li>
                 ))}
               </ol>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {showTips && missed && TIPS.get(missed.n) && (
-        <aside
-          key={missed.n}
-          aria-live="polite"
-          className="-mt-1 rounded-xl border border-dashed border-line bg-surface-2 px-3 py-2 text-[12px] leading-relaxed text-muted"
-        >
-          <span className="mr-1.5 font-bold text-ink">
-            覚え方のコツ <span className="font-word">{missed.word}</span>
-            <span className="ml-1 text-[11px] font-normal tabular-nums">No.{missed.n}</span>
-          </span>
-          {TIPS.get(missed.n)}
-        </aside>
-      )}
+
+      {/* めくったらすぐ、カードのすぐ下に覚え方のコツ */}
+      {showTips && flipped && <TipBox key={w.n} w={w} className="-mt-1" />}
 
       <p className="whitespace-pre-line text-center text-xs text-muted">
         {flipped
