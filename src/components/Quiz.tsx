@@ -8,7 +8,7 @@ import { clearSession, saveSession, type QuizSave } from "@/lib/session-store";
 import { useSettings } from "@/lib/settings";
 import { TIPS } from "@/lib/tips";
 import TipBox from "./TipBox";
-import { BYNUM, catOf, homographHint, shuffle, type Word } from "@/lib/words";
+import { BYNUM, REL_LABEL, catOf, homographHint, shuffle, type Word } from "@/lib/words";
 import { InlineMeans, QuizMean, ShortMean } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
@@ -153,7 +153,7 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
             <div className="panel overflow-hidden">
               {missed.map(({ word: w }) => (
                 <div key={w.n} className="border-t border-line px-3.5 py-2.5 first:border-t-0">
-                  <span className="mr-2 text-xs tabular-nums text-muted">{w.n}</span>
+                  <span className="mr-2 text-xs tabular-nums text-muted">{w.no}</span>
                   <b className="font-word text-[17px] font-black">{w.word}</b>
                   <div className="mt-0.5 text-[13px] text-muted">
                     <InlineMeans w={w} />
@@ -246,6 +246,7 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
             {answered && t.kanji && <div className="text-[15px] text-muted">{t.kanji}</div>}
             <span className="flex flex-wrap justify-center gap-1.5">
               <span className="rounded border border-line px-1.5 text-xs text-muted">{t.pos}</span>
+              {t.rel && <span className="rounded bg-surface-2 px-1.5 text-xs font-bold text-muted">{REL_LABEL[t.rel]}</span>}
               {homographHint(t) && <span className="rounded bg-surface-2 px-1.5 text-xs font-bold text-muted">{homographHint(t)}</span>}
             </span>
           </>
@@ -278,7 +279,7 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
                     {q.dir === "w2m" ? (
                       <>
                         <b className="font-word text-sm text-ink">{o.word}</b>
-                        {o.kanji && `［${o.kanji}］`}（No.{o.n}）
+                        {o.kanji && `［${o.kanji}］`}（No.{o.no}）
                       </>
                     ) : (
                       <>

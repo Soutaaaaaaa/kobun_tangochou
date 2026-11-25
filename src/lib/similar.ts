@@ -1,5 +1,5 @@
 import { OWN } from "./distractors";
-import { WORDS, type Word } from "./words";
+import { BOOK_WORDS, type Word } from "./words";
 
 /**
  * 似た意味の単語。
@@ -47,7 +47,7 @@ const CACHE = new Map<number, { word: Word; shared: string[] }[]>();
 
 export function similarWords(w: Word, max = 5): { word: Word; shared: string[] }[] {
   if (CACHE.has(w.n)) return CACHE.get(w.n)!;
-  const out = WORDS.filter((o) => o.n !== w.n && !keys(o).some((k) => keys(w).includes(k)))
+  const out = BOOK_WORDS[w.book].filter((o) => o.n !== w.n && !keys(o).some((k) => keys(w).includes(k)))
     .map((o) => ({ word: o, ...score(w, o) }))
     .filter((x) => x.s >= 1)
     .sort((a, b) => b.s - a.s || Math.abs(a.word.n - w.n) - Math.abs(b.word.n - w.n))

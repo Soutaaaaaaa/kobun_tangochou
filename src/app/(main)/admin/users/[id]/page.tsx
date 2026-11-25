@@ -6,7 +6,7 @@ import AppBar, { Page } from "@/components/AppBar";
 import { InlineMeans } from "@/components/Mean";
 import { createClient } from "@/lib/supabase/client";
 import { ago, fmtDateTime, isKnown, type WordProgress } from "@/lib/progress";
-import { BYNUM, CATS, WORDS } from "@/lib/words";
+import { ALL_WORDS, BYNUM, CATS, headwords } from "@/lib/words";
 
 type Log = { id: number; word_no: number; correct: boolean; mode: string; created_at: string };
 type Profile = { username: string; is_admin: boolean; created_at: string };
@@ -44,7 +44,7 @@ export default function AdminUserPage() {
     () => (rows ?? []).filter((r) => r.wrong_count > 0).sort((a, b) => b.wrong_count - a.wrong_count).slice(0, 10),
     [rows],
   );
-  const known = WORDS.filter((w) => isKnown(map.get(w.n))).length;
+  const known = ALL_WORDS.filter((w) => !w.rel && isKnown(map.get(w.n))).length;
   const studied = (rows ?? []).filter((r) => r.last_studied_at).length;
   const lastStudied = (rows ?? []).reduce<string | null>((a, r) => (r.last_studied_at && (!a || r.last_studied_at > a) ? r.last_studied_at : a), null);
 
@@ -81,10 +81,10 @@ export default function AdminUserPage() {
               <p className="text-xs text-muted">最終学習 {fmtDateTime(lastStudied)}（{ago(lastStudied)}）</p>
               <div className="grid gap-2">
                 {CATS.map((c) => {
-                  const cw = WORDS.filter((w) => w.n >= c.from && w.n <= c.to);
+                  const cw = headwords(c.book).filter((w) => w.head >= c.from && w.head <= c.to);
                   const k = cw.filter((w) => isKnown(map.get(w.n))).length;
                   return (
-                    <div key={c.id} className="grid grid-cols-[5em_1fr_auto] items-center gap-2 text-xs">
+                    <div key={c.id} className="grid grid-cols-[6.5em_1fr_auto] items-center gap-2 text-xs">
                       <span style={{ color: c.color }} className="font-bold">
                         {c.name}
                       </span>
@@ -110,7 +110,7 @@ export default function AdminUserPage() {
                   return (
                     <div key={r.word_no} className="border-t border-line px-3.5 py-2.5 first:border-t-0">
                       <div className="flex items-baseline gap-2">
-                        <span className="text-xs tabular-nums text-muted">{w.n}</span>
+                        <span className="text-xs tabular-nums text-muted">{w.book === "kobun315" ? `315-${w.no}` : w.no}</span>
                         <b className="font-word text-[17px] font-black">{w.word}</b>
                       </div>
                       <div className="text-[13px] text-muted">

@@ -1,4 +1,4 @@
-import { WORDS, catOf, shuffle, type Word } from "./words";
+import { ALL_WORDS, BOOK_WORDS, catOf, shuffle, type Word } from "./words";
 
 /* 意味の重なり判定（重なる語は選択肢にしない＝正解が2つにならない） */
 const plainMean = (m: string) => m.replace(/^\[[^\]]+\]/, "").replace(/《[^》]+》/g, "");
@@ -19,11 +19,11 @@ function meanTokens(w: Word): Set<string> {
  * 意味をまとめて扱う。きこゆ（聞こえる）の問題に きこえさす（申し上げる）が
  * 誤答として出ると、どちらも正しく見えてしまうため。
  */
-export const OWN = new Map(WORDS.map((w) => [w.n, meanTokens(w)]));
+export const OWN = new Map(ALL_WORDS.map((w) => [w.n, meanTokens(w)]));
 const TOK = new Map(
-  WORDS.map((w) => {
+  ALL_WORDS.map((w) => {
     const set = new Set<string>();
-    for (const o of WORDS)
+    for (const o of BOOK_WORDS[w.book])
       if (o.word.split("・").some((k) => w.word.split("・").includes(k))) OWN.get(o.n)!.forEach((t) => set.add(t));
     return [w.n, set];
   }),
@@ -75,6 +75,15 @@ function lev(a: string, b: string): number {
   return d[a.length][b.length];
 }
 
+/**
+ * 古文単語315：同じ番号の見出し語と関連語は意味が近い（きこゆ／きこえ など）ので選択肢にしない。
+ * 反対語（うしろめたし／うしろやすし など）だけは、まぎらわしい誤答として使う。
+ */
+function sameFamily(a: Word, b: Word): boolean {
+  if (a.book !== "kobun315" || a.head !== b.head) return false;
+  return a.rel !== "反" && b.rel !== "反";
+}
+
 export type QuizDir = "w2m" | "m2w";
 
 /** 正解 t に対する紛らわしい誤答を3つ選ぶ */
@@ -82,8 +91,10 @@ export function distractors(t: Word, dir: QuizDir): Word[] {
   const tg = groupsOf(t);
   const tk = keysOf(t)[0];
   const scored: [number, Word][] = [];
-  for (const c of WORDS) {
+  for (const c of BOOK_WORDS[t.book]) {
     if (c.n === t.n || conflicts(t, c)) continue;
+    // 同じ番号の見出し語と関連語は意味が近いので選択肢にしない（反対語は除く）
+    if (sameFamily(t, c)) continue;
     // 同じ読みの別の語（おほす＝命じる／おっしゃる など）は、どちらの形式でも選択肢に出さない
     if (keysOf(c).some((k) => keysOf(t).includes(k))) continue;
     const ck = keysOf(c)[0];

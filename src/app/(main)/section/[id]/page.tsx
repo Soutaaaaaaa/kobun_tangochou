@@ -8,14 +8,17 @@ import { useProgress } from "@/components/ProgressProvider";
 import WordList from "@/components/WordList";
 import { isKnown } from "@/lib/progress";
 import { studyHref } from "@/lib/study-url";
-import { SECTIONS, sectionWords } from "@/lib/words";
+import { useSettings } from "@/lib/settings";
+import { sectionById, sectionWords } from "@/lib/words";
+import RelatedToggle from "@/components/RelatedToggle";
 
 const PREF_KEY = "kobun400-section-prefs";
 
 export default function SectionPage() {
   const { id } = useParams<{ id: string }>();
-  const s = SECTIONS[Number(id) - 1];
+  const s = sectionById(decodeURIComponent(id));
   const { progress } = useProgress();
+  const [{ includeRelated }] = useSettings();
   const [shuffle, setShuffle] = useState(false);
   const [onlyNotKnown, setOnlyNotKnown] = useState(false);
 
@@ -33,10 +36,15 @@ export default function SectionPage() {
   };
 
   if (!s) notFound();
+  const is315 = s.book === "kobun315";
+  const rel = is315 && includeRelated;
+  // 覚えた数は見出し語で数える。一覧には関連語も出す
   const ws = sectionWords(s);
+  const listed = is315 ? sectionWords(s, true) : ws;
+  const relCount = listed.length - ws.length;
   const k = ws.filter((w) => isKnown(progress.get(w.n))).length;
   const notKnown = ws.length - k;
-  const title = `セクション ${s.id}`;
+  const title = is315 ? `315 セクション ${s.num}` : `セクション ${s.num}`;
   const ranges: [number, number][] = [[s.from, s.to]];
 
   return (
@@ -46,6 +54,7 @@ export default function SectionPage() {
         <section className="panel grid gap-3 p-4" style={{ ["--cc" as string]: s.cat.color }}>
           <span className="chip-dot text-xs font-bold" style={{ color: s.cat.color }}>
             {s.cat.name}　No.{s.from}–{s.to}
+            {is315 && relCount > 0 && <span className="ml-1 font-normal text-muted">（関連語 {relCount}語）</span>}
           </span>
           <div className="font-word text-[34px] font-black leading-none tabular-nums">
             {k}
@@ -63,11 +72,13 @@ export default function SectionPage() {
                 order: shuffle ? "random" : "seq",
                 notKnownOnly: onlyNotKnown && notKnown > 0,
                 title,
+                book: s.book,
+                includeRelated: rel,
               })}
             >
               単語カード
             </Link>
-            <Link className="btn" href={studyHref({ mode: "quiz", ranges, order: "random", format: "mix", title })}>
+            <Link className="btn" href={studyHref({ mode: "quiz", ranges, order: "random", format: "mix", title, book: s.book, includeRelated: rel })}>
               四択クイズ
             </Link>
           </div>
@@ -97,11 +108,12 @@ export default function SectionPage() {
               覚えていない語だけ（{notKnown}語）
             </label>
           </div>
-          <Link href={`/random?sec=${s.id}`} className="text-center text-[13px] font-bold text-ai">
+          {is315 && <RelatedToggle />}
+          <Link href={`/random?sec=${s.id}${is315 ? "&b=kobun315" : ""}`} className="text-center text-[13px] font-bold text-ai">
             このセクションを含めて範囲を選び、ランダム出題する →
           </Link>
         </section>
-        <WordList words={ws} />
+        <WordList words={listed} />
       </Page>
     </>
   );

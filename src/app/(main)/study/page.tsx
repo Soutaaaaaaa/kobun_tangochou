@@ -11,7 +11,7 @@ import { clearSession, loadSession, type Saved } from "@/lib/session-store";
 import { getSettings } from "@/lib/settings";
 import { studyHref } from "@/lib/study-url";
 import { weightedByProgress } from "@/lib/weight";
-import { BYNUM, parseRanges, shuffle, wordsInRanges, type Word } from "@/lib/words";
+import { BOOK_SIZE, BYNUM, isBookId, parseRanges, shuffle, wordsInRanges, type Word } from "@/lib/words";
 
 function Study() {
   const params = useSearchParams();
@@ -30,14 +30,15 @@ function Study() {
   useEffect(() => {
     if (loading) return;
     const p = new URLSearchParams(key);
-    const ranges = parseRanges(p.get("r"));
+    const bk = isBookId(p.get("b")) ? (p.get("b") as "kobun315") : "kobun400";
+    const ranges = parseRanges(p.get("r"), BOOK_SIZE[bk]);
     let list: Word[] = p.get("ids")
       ? p
           .get("ids")!
           .split(",")
           .map((x) => BYNUM.get(Number(x)))
           .filter((w): w is Word => !!w)
-      : wordsInRanges(ranges);
+      : wordsInRanges(ranges, bk, p.get("rel") === "1");
     if (p.get("weak") === "1") list = list.filter((w) => progress.get(w.n)?.is_weak);
     if (p.get("nk") === "1") list = list.filter((w) => !isKnown(progress.get(w.n)));
     const n = Number(p.get("n") ?? 0);
@@ -60,7 +61,9 @@ function Study() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, loading]);
 
-  const ranges = parseRanges(params.get("r"));
+  const book = isBookId(params.get("b")) ? (params.get("b") as "kobun315") : "kobun400";
+  const ranges = parseRanges(params.get("r"), BOOK_SIZE[book]);
+  const rel = params.get("rel") === "1";
   return (
     <>
       <AppBar title={`${title}：${mode === "quiz" ? "クイズ" : "カード"}`} back="/" />
@@ -97,7 +100,7 @@ function Study() {
             resume={resume?.kind === "cards" ? resume : undefined}
             words={words}
             title={title}
-            quizHref={ranges.length ? studyHref({ mode: "quiz", ranges, order: "random", format: "mix", title }) : undefined}
+            quizHref={ranges.length ? studyHref({ mode: "quiz", ranges, order: "random", format: "mix", title, book, includeRelated: rel }) : undefined}
           />
         ) : (
           <Quiz

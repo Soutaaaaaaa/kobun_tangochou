@@ -10,15 +10,19 @@ import { BOOKS } from "@/lib/books";
 import { REVIEW_SIZE } from "@/lib/review";
 import { clearSession, listSessions } from "@/lib/session-store";
 import { useSettings } from "@/lib/settings";
-import { CATS, SECTIONS, WORDS, sectionWords } from "@/lib/words";
+import { BOOK_SIZE, bookCats, bookSections, headwords, sectionWords, type BookId } from "@/lib/words";
 
 export default function Home() {
   const { username, isAdmin, progress, loading } = useProgress();
   const [paused, setPaused] = useState<ReturnType<typeof listSessions>>([]);
-  const [{ resumeMode }] = useSettings();
+  const [{ resumeMode, currentBook: book }, setSettings] = useSettings();
   useEffect(() => setPaused(listSessions()), []);
-  const known = WORDS.filter((w) => isKnown(progress.get(w.n))).length;
-  const weak = WORDS.filter((w) => progress.get(w.n)?.is_weak).length;
+  // 覚えた数・苦手の数は、選んでいる単語帳の見出し語で数える（関連語は数えない）
+  const knownOf = (b: BookId) => headwords(b).filter((w) => isKnown(progress.get(w.n))).length;
+  const known = knownOf(book);
+  const total = BOOK_SIZE[book];
+  const bookName = BOOKS.find((b) => b.id === book)?.name ?? "";
+  const weak = headwords(book).filter((w) => progress.get(w.n)?.is_weak).length;
   const lastStudied = [...progress.values()].reduce<string | null>(
     (acc, p) => (p.last_studied_at && (!acc || p.last_studied_at > acc) ? p.last_studied_at : acc),
     null,
@@ -95,15 +99,16 @@ export default function Home() {
           </section>
         )}
         <section className="panel grid gap-3 p-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <span className="text-xs font-bold text-muted">{bookName}</span>
+          <div className="-mt-1 flex flex-wrap items-baseline justify-between gap-3">
             <div className="font-word text-[34px] font-black leading-none tabular-nums">
               {loading ? "–" : known}
-              <small className="ml-1 font-body text-sm font-medium text-muted">/ 400 語 覚えた</small>
+              <small className="ml-1 font-body text-sm font-medium text-muted">/ {total} 語 覚えた</small>
             </div>
             <span className="text-[13px] text-muted">最終学習 {ago(lastStudied)}</span>
           </div>
           <div className="meter">
-            <i style={{ width: `${known / 4}%` }} />
+            <i style={{ width: `${(known / total) * 100}%` }} />
           </div>
           <Link href="/review" className="btn btn-primary min-h-[52px] text-[15px]">
             今日の復習（{REVIEW_SIZE}問）
@@ -124,25 +129,31 @@ export default function Home() {
           <div className="grid grid-cols-3 gap-2">
             {BOOKS.map((b) =>
               b.ready ? (
-                <a
+                <button
                   key={b.id}
-                  href={`#${b.id}`}
-                  className="panel relative grid content-between gap-2 border-[1.5px] border-ai p-3"
-                  aria-current="true"
+                  type="button"
+                  onClick={() => {
+                    setSettings({ currentBook: b.id as BookId });
+                    document.getElementById("sections")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className={`panel relative grid content-between gap-2 p-3 text-left ${
+                    book === b.id ? "border-[1.5px] border-ai" : ""
+                  }`}
+                  aria-pressed={book === b.id}
                 >
                   <span className="grid gap-0.5">
                     <b className="font-word text-[15px] font-black leading-tight">{b.name}</b>
-                    <span className="text-[11px] text-muted">{b.sub}</span>
+                    <span className="text-[11px] text-muted">{book === b.id ? "学習中" : b.sub}</span>
                   </span>
                   <span className="grid gap-1">
                     <span className="text-[11px] tabular-nums text-muted">
-                      <b className="text-sm text-ink">{loading ? "–" : known}</b>/400 語
+                      <b className="text-sm text-ink">{loading ? "–" : knownOf(b.id as BookId)}</b>/{BOOK_SIZE[b.id as BookId]} 語
                     </span>
                     <span className="meter h-[5px]">
-                      <i style={{ width: `${known / 4}%` }} />
+                      <i style={{ width: `${(knownOf(b.id as BookId) / BOOK_SIZE[b.id as BookId]) * 100}%` }} />
                     </span>
                   </span>
-                </a>
+                </button>
               ) : (
                 <div
                   key={b.id}
@@ -161,16 +172,16 @@ export default function Home() {
           </div>
         </section>
 
-        <h2 id="kobun400" className="scroll-mt-16 px-0.5 pt-2 font-word text-xl font-black">
-          古文単語400
+        <h2 id="sections" className="scroll-mt-16 px-0.5 pt-2 font-word text-xl font-black">
+          {bookName}
         </h2>
-        {CATS.map((c) => {
-          const secs = SECTIONS.filter((s) => s.cat === c);
-          const cw = WORDS.filter((w) => w.n >= c.from && w.n <= c.to);
+        {bookCats(book).map((c) => {
+          const secs = bookSections(book).filter((s) => s.cat === c);
+          const cw = headwords(book).filter((w) => w.head >= c.from && w.head <= c.to);
           return (
             <section key={c.id} className="grid gap-2" style={{ ["--cc" as string]: c.color }}>
               <div className="flex items-baseline gap-2.5 px-0.5 pt-1">
-                <h2 className="chip-dot text-[17px] font-bold">{c.name}</h2>
+                <h2 className="chip-dot text-[17px] font-bold">{book === "kobun315" ? "セクション" : c.name}</h2>
                 <span className="text-[13px] tabular-nums text-muted">
                   No.{c.from}–{c.to}　{cw.filter((w) => isKnown(progress.get(w.n))).length}/{cw.length}
                 </span>
@@ -186,11 +197,11 @@ export default function Home() {
                       className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-t border-line px-3.5 py-3 first:border-t-0 hover:bg-surface-2"
                     >
                       <span className="w-[2ch] text-center font-word text-xl font-black tabular-nums" style={{ color: c.color }}>
-                        {s.id}
+                        {s.num}
                       </span>
                       <span className="grid min-w-0 gap-1">
                         <span className="text-sm font-bold">
-                          セクション {s.id}
+                          セクション {s.num}
                           <small className="ml-1.5 font-normal tabular-nums text-muted">
                             No.{s.from}–{s.to}・{ws.length}語
                           </small>

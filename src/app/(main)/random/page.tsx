@@ -6,7 +6,10 @@ import AppBar, { Page } from "@/components/AppBar";
 import { useProgress } from "@/components/ProgressProvider";
 import type { QuizFormat } from "@/components/Quiz";
 import { studyHref } from "@/lib/study-url";
-import { CATS, SECTIONS, wordsInRanges, type Range } from "@/lib/words";
+import RelatedToggle from "@/components/RelatedToggle";
+import { BOOKS } from "@/lib/books";
+import { useSettings } from "@/lib/settings";
+import { BOOK_SIZE, bookCats, bookSections, isBookId, sectionById, wordsInRanges, type Range } from "@/lib/words";
 
 type Tab = "pick" | "number";
 
@@ -46,6 +49,13 @@ function RandomForm() {
   const router = useRouter();
   const params = useSearchParams();
   const { progress } = useProgress();
+  const [{ currentBook, includeRelated }] = useSettings();
+  const qb = params.get("b");
+  const book = isBookId(qb) ? qb : currentBook;
+  const CATS = bookCats(book);
+  const SECTIONS = bookSections(book);
+  const MAX = BOOK_SIZE[book];
+  const rel = book === "kobun315" && includeRelated;
 
   const [tab, setTab] = useState<Tab>("pick");
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -57,8 +67,8 @@ function RandomForm() {
   const [weakOnly, setWeakOnly] = useState(false);
 
   useEffect(() => {
-    const sec = Number(params.get("sec"));
-    if (sec >= 1 && sec <= SECTIONS.length) setPicked(new Set([`s${sec}`]));
+    const sec = sectionById(params.get("sec") ?? "");
+    if (sec) setPicked(new Set([`s${sec.id}`]));
   }, [params]);
 
   const toggle = (key: string) =>
@@ -72,8 +82,8 @@ function RandomForm() {
   const nFrom = Number(from);
   const nTo = Number(to);
   const numberError =
-    !Number.isInteger(nFrom) || !Number.isInteger(nTo) || nFrom < 1 || nTo > 400 || nFrom > nTo
-      ? "1〜400 の番号で、「から」が「まで」以下になるように入力してください。"
+    !Number.isInteger(nFrom) || !Number.isInteger(nTo) || nFrom < 1 || nTo > MAX || nFrom > nTo
+      ? `1〜${MAX} の番号で、「から」が「まで」以下になるように入力してください。`
       : null;
 
   const { ranges, label } = useMemo(() => {
@@ -90,14 +100,15 @@ function RandomForm() {
     for (const s of SECTIONS)
       if (picked.has(`s${s.id}`) && !picked.has(`c${s.cat.id}`)) {
         rs.push([s.from, s.to]);
-        names.push(`S${s.id}`);
+        names.push(`S${s.num}`);
       }
     return { ranges: mergeRanges(rs), label: names.join("・") || "未選択" };
-  }, [tab, picked, nFrom, nTo, numberError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, picked, nFrom, nTo, numberError, book]);
 
   const pool = useMemo(
-    () => wordsInRanges(ranges).filter((w) => !weakOnly || progress.get(w.n)?.is_weak),
-    [ranges, weakOnly, progress],
+    () => wordsInRanges(ranges, book, rel).filter((w) => !weakOnly || progress.get(w.n)?.is_weak),
+    [ranges, weakOnly, progress, book, rel],
   );
   const actual = count === 0 ? pool.length : Math.min(count, pool.length);
 
@@ -110,13 +121,16 @@ function RandomForm() {
         order: "random",
         weakOnly,
         format,
-        title: `ランダム：${label}${weakOnly ? "（苦手）" : ""}`,
+        title: `ランダム：${book === "kobun400" ? "" : "315 "}${label}${weakOnly ? "（苦手）" : ""}`,
+        book,
+        includeRelated: rel,
       }),
     );
   };
 
   return (
     <Page>
+      <p className="-mb-1 px-0.5 text-[13px] font-bold text-muted">{BOOKS.find((b) => b.id === book)?.name}</p>
       <section className="panel grid gap-4 p-4">
         <div className="grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1">
           {(
@@ -167,7 +181,7 @@ function RandomForm() {
                         disabled={viaCat}
                         onClick={() => toggle(`s${s.id}`)}
                       >
-                        <span className="block">S{s.id}</span>
+                        <span className="block">S{s.num}</span>
                         <small className="tabular-nums text-muted">
                           {s.from}–{s.to}
                         </small>
@@ -185,7 +199,7 @@ function RandomForm() {
           </div>
         ) : (
           <div className="grid gap-2">
-            <h3 className="text-[13px] text-muted">単語番号（1〜400）</h3>
+            <h3 className="text-[13px] text-muted">単語番号（1〜{MAX}）</h3>
             <div className="flex items-center gap-2">
               <input
                 id="range-from"
@@ -254,6 +268,7 @@ function RandomForm() {
           <input type="checkbox" className="h-4 w-4 accent-[var(--ai)]" checked={weakOnly} onChange={(e) => setWeakOnly(e.target.checked)} />
           苦手リストの単語だけ
         </label>
+        {book === "kobun315" && <RelatedToggle />}
         <p className="text-[13px] text-muted">
           {pool.length
             ? `対象 ${pool.length} 語から ${actual} 語をランダムに出題します。`

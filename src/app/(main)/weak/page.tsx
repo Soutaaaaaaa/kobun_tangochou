@@ -8,21 +8,25 @@ import WordList from "@/components/WordList";
 import { createClient } from "@/lib/supabase/client";
 import { fmtDateTime } from "@/lib/progress";
 import { studyHref } from "@/lib/study-url";
-import { BYNUM, WORDS } from "@/lib/words";
+import { BOOKS } from "@/lib/books";
+import { useSettings } from "@/lib/settings";
+import { BOOK_WORDS, BYNUM } from "@/lib/words";
 
 type Log = { id: number; word_no: number; correct: boolean; mode: string; created_at: string };
 const MODE_LABEL: Record<string, string> = { card: "カード", quiz: "クイズ", review: "今日の復習" };
 
 export default function WeakPage() {
   const { progress, userId } = useProgress();
+  const [{ currentBook: book }] = useSettings();
+  const bookName = BOOKS.find((b) => b.id === book)?.name ?? "";
   const [logs, setLogs] = useState<Log[] | null>(null);
 
   const weak = useMemo(
     () =>
-      WORDS.filter((w) => progress.get(w.n)?.is_weak).sort((a, b) =>
+      BOOK_WORDS[book].filter((w) => progress.get(w.n)?.is_weak).sort((a, b) =>
         (progress.get(b.n)?.last_wrong_at ?? "").localeCompare(progress.get(a.n)?.last_wrong_at ?? ""),
       ),
-    [progress],
+    [progress, book],
   );
 
   useEffect(() => {
@@ -39,7 +43,7 @@ export default function WeakPage() {
   const ids = weak.map((w) => w.n);
   return (
     <>
-      <AppBar title="苦手リスト" back="/" />
+      <AppBar title={book === "kobun400" ? "苦手リスト" : `苦手リスト（${bookName}）`} back="/" />
       <Page>
         <section className="panel grid gap-3 p-4">
           <p className="font-word text-[34px] font-black leading-none tabular-nums">

@@ -7,23 +7,45 @@ import { useProgress } from "@/components/ProgressProvider";
 import Quiz, { type QuizFormat, type QuizItem } from "@/components/Quiz";
 import { REVIEW_SIZE, buildTodayReview } from "@/lib/review";
 import { clearSession, loadSession, type Saved } from "@/lib/session-store";
-import { getSettings } from "@/lib/settings";
+import { getSettings, useSettings } from "@/lib/settings";
+import { BOOK_WORDS, isBookId, type BookId } from "@/lib/words";
+import { BOOKS } from "@/lib/books";
 
-const SAVE_KEY = "review";
+/** 中断の保存キー（古文単語400 は従来どおり "review"） */
+const saveKeyOf = (b: BookId) => (b === "kobun400" ? "review" : `review-${b}`);
+const poolOf = (b: BookId, rel: boolean) => BOOK_WORDS[b].filter((w) => rel || !w.rel);
 
 export default function ReviewPage() {
   const { progress, loading } = useProgress();
+  const [{ currentBook: book, includeRelated }] = useSettings();
+  const rel = book === "kobun315" && includeRelated;
+  const SAVE_KEY = saveKeyOf(book);
+  const bookName = BOOKS.find((b) => b.id === book)?.name ?? "";
+  const title = book === "kobun400" ? "今日の復習" : `今日の復習（${bookName}）`;
   const [items, setItems] = useState<QuizItem[] | null>(null);
   const [format, setFormat] = useState<QuizFormat | "cards">("mix");
   const [started, setStarted] = useState(false);
   const [saved, setSaved] = useState<Saved | null>(null);
   const [resume, setResume] = useState<Saved | null>(null);
+  const [, setSettings] = useSettings();
+  // トップの「中断中の学習」などから ?b=kobun315 で来たら、その単語帳に切り替える
   useEffect(() => {
-    const s = loadSession(SAVE_KEY);
+    const b = new URLSearchParams(window.location.search).get("b");
+    if (isBookId(b) && b !== getSettings().currentBook) setSettings({ currentBook: b });
+  }, [setSettings]);
+
+  // 単語帳ごとに、中断した続きの確認と問題づくりをやり直す
+  useEffect(() => {
+    setItems(null);
+    setStarted(false);
+    setResume(null);
+    const key = saveKeyOf(book);
+    const s = loadSession(key);
     const rm = getSettings().resumeMode;
     // 設定：ask＝たずねる／resume＝確認せずに続きから／fresh＝いつも最初から
     if (s && rm === "fresh") {
-      clearSession(SAVE_KEY);
+      clearSession(key);
+      setSaved(null);
       return;
     }
     setSaved(s);
@@ -31,12 +53,12 @@ export default function ReviewPage() {
       setResume(s);
       setStarted(true);
     }
-  }, []);
+  }, [book]);
 
   // 学習記録が読み込まれたら一度だけ組み立てる
   useEffect(() => {
-    if (!loading && items === null) setItems(buildTodayReview(progress));
-  }, [loading, progress, items]);
+    if (!loading && items === null) setItems(buildTodayReview(progress, REVIEW_SIZE, Date.now(), poolOf(book, rel)));
+  }, [loading, progress, items, book, rel]);
 
   const counts = items
     ? items.reduce<Record<string, number>>((acc, it) => {
@@ -50,7 +72,7 @@ export default function ReviewPage() {
     <button
       className="btn"
       onClick={() => {
-        setItems(buildTodayReview(progress, REVIEW_SIZE));
+        setItems(buildTodayReview(progress, REVIEW_SIZE, Date.now(), poolOf(book, rel)));
         clearSession(SAVE_KEY);
         setSaved(null);
         setResume(null);
@@ -64,7 +86,7 @@ export default function ReviewPage() {
 
   return (
     <>
-      <AppBar title="今日の復習" back="/" />
+      <AppBar title={title} back="/" />
       <Page>
         {!items ? (
           <p className="py-16 text-center text-muted">問題を用意しています…</p>
@@ -159,27 +181,27 @@ export default function ReviewPage() {
         ) : resume?.kind === "cards" ? (
           <FlashCards
             words={[]}
-            title="今日の復習"
+            title={title}
             recordMode="review"
             saveKey={SAVE_KEY}
-            saveHref="/review"
+            saveHref={book === "kobun400" ? "/review" : `/review?b=${book}`}
             resume={resume}
             footer={newSet}
           />
         ) : resume?.kind === "quiz" ? (
-          <Quiz items={[]} format="mix" title="今日の復習" recordMode="review" footer={newSet} saveKey={SAVE_KEY} saveHref="/review" resume={resume} />
+          <Quiz items={[]} format="mix" title={title} recordMode="review" footer={newSet} saveKey={SAVE_KEY} saveHref={book === "kobun400" ? "/review" : `/review?b=${book}`} resume={resume} />
         ) : format === "cards" ? (
           <FlashCards
             saveKey={SAVE_KEY}
-            saveHref="/review"
+            saveHref={book === "kobun400" ? "/review" : `/review?b=${book}`}
             words={items.map((x) => x.word)}
-            title="今日の復習"
+            title={title}
             recordMode="review"
             badges={Object.fromEntries(items.map((x) => [x.word.n, { text: x.reason ?? "", priority: x.kind === "priority" }]))}
             footer={newSet}
           />
         ) : (
-          <Quiz items={items} format={format} title="今日の復習" recordMode="review" footer={newSet} saveKey={SAVE_KEY} saveHref="/review" />
+          <Quiz items={items} format={format} title={title} recordMode="review" footer={newSet} saveKey={SAVE_KEY} saveHref={book === "kobun400" ? "/review" : `/review?b=${book}`} />
         )}
       </Page>
     </>

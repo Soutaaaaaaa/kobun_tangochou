@@ -1,5 +1,5 @@
 import type { QuizFormat } from "@/components/Quiz";
-import { rangesToString, type Range } from "./words";
+import { rangesToString, type BookId, type Range } from "./words";
 
 export type StudyParams = {
   mode: "cards" | "quiz";
@@ -14,6 +14,10 @@ export type StudyParams = {
   weighted?: boolean;
   format?: QuizFormat;
   title: string;
+  /** 単語帳（範囲 r の番号はこの単語帳の見出し語番号） */
+  book?: BookId;
+  /** 関連語も出す（古文単語315） */
+  includeRelated?: boolean;
 };
 
 export function studyHref(p: StudyParams): string {
@@ -28,5 +32,7 @@ export function studyHref(p: StudyParams): string {
   if (p.weighted) q.set("w", "1");
   if (p.mode === "quiz") q.set("q", p.format ?? "mix");
   q.set("t", p.title);
+  if (p.book && p.book !== "kobun400") q.set("b", p.book);
+  if (p.includeRelated) q.set("rel", "1");
   return `/study?${q.toString()}`;
 }

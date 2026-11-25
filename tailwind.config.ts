@@ -23,6 +23,7 @@ export default {
         c2: v("c2"),
         c3: v("c3"),
         c4: v("c4"),
+        c5: v("c5"),
       },
       fontFamily: {
         word: ['"Zen Old Mincho"', '"Hiragino Mincho ProN"', '"Yu Mincho"', "serif"],

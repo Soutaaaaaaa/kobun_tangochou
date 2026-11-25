@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import type { BookId } from "./words";
 
 /**
  * 端末ごとの表示設定（このブラウザの localStorage に保存）。
@@ -11,9 +12,13 @@ export type Settings = {
   showTips: boolean;
   /** 中断した学習を開いたとき：ask＝毎回たずねる、resume＝自動で続きから、fresh＝いつも最初から */
   resumeMode: ResumeMode;
+  /** トップ画面で選んでいる単語帳 */
+  currentBook: BookId;
+  /** 古文単語315：関連語（関・同・反・類）もカードやクイズに出す */
+  includeRelated: boolean;
 };
 export type ResumeMode = "ask" | "resume" | "fresh";
-const DEFAULTS: Settings = { showTips: true, resumeMode: "ask" };
+const DEFAULTS: Settings = { showTips: true, resumeMode: "ask", currentBook: "kobun400", includeRelated: false };
 const KEY = "kobun-settings";
 
 let cache: Settings | null = null;
@@ -26,6 +31,7 @@ function read(): Settings {
     // 以前の「確認する オン／オフ」の設定を引き継ぐ
     if (raw.resumeMode === undefined && raw.askResume === false) raw.resumeMode = "resume";
     delete raw.askResume;
+    if (raw.currentBook !== "kobun400" && raw.currentBook !== "kobun315") delete raw.currentBook;
     cache = { ...DEFAULTS, ...raw };
   } catch {
     cache = DEFAULTS;

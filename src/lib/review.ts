@@ -1,6 +1,6 @@
 import { daysSince, type ProgressMap } from "./progress";
 import { difficultyWeight, weightedShuffle } from "./weight";
-import { WORDS, shuffle, type Word } from "./words";
+import { WORDS400, shuffle, type Word } from "./words";
 
 export type ReviewItem = { word: Word; reason: string; kind: "priority" | "normal" };
 
@@ -13,10 +13,16 @@ const PRIORITY_RATIO = 0.7;
  * 優先度: 数日前（1〜7日前、とくに3日前前後）に間違えた語 > 苦手リストの語 > しばらく学習していない語。
  * 今日すでに正解した語は後回し。優先枠のあとに、ランダムな「普通の単語」を混ぜてシャッフルする。
  */
-export function buildTodayReview(progress: ProgressMap, size = REVIEW_SIZE, now = Date.now()): ReviewItem[] {
+export function buildTodayReview(
+  progress: ProgressMap,
+  size = REVIEW_SIZE,
+  now = Date.now(),
+  /** 出題する単語（単語帳ごと。関連語を含めるかもここで決める） */
+  pool: Word[] = WORDS400,
+): ReviewItem[] {
   const scored: { word: Word; score: number; reason: string }[] = [];
 
-  for (const w of WORDS) {
+  for (const w of pool) {
     const p = progress.get(w.n);
     if (!p || !p.last_studied_at) continue; // 未学習の語は「普通の単語」枠で出す
     const dStudy = daysSince(p.last_studied_at, now)!;
@@ -61,7 +67,7 @@ export function buildTodayReview(progress: ProgressMap, size = REVIEW_SIZE, now 
   const chosen = new Set(priority.map((x) => x.word.n));
 
   const normal = weightedShuffle(
-    WORDS.filter((w) => !chosen.has(w.n)),
+    pool.filter((w) => !chosen.has(w.n)),
     (w) => difficultyWeight(progress.get(w.n), now),
   )
     .slice(0, size - priority.length)

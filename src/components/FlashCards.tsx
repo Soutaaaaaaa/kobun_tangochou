@@ -8,7 +8,7 @@ import { useSettings } from "@/lib/settings";
 import { similarWords } from "@/lib/similar";
 import { TIPS } from "@/lib/tips";
 import TipBox from "./TipBox";
-import { BYNUM, CIRC, catOf, homographHint, type Word } from "@/lib/words";
+import { BYNUM, CIRC, REL_LABEL, catOf, homographHint, type Word } from "@/lib/words";
 import { InlineMeans, MeanText } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
@@ -312,7 +312,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
             <div className="panel overflow-hidden">
               {ng.map((w) => (
                 <div key={w.n} className="border-t border-line px-3.5 py-2.5 first:border-t-0">
-                  <span className="mr-2 text-xs tabular-nums text-muted">{w.n}</span>
+                  <span className="mr-2 text-xs tabular-nums text-muted">{w.no}</span>
                   <b className="font-word text-[17px] font-black">{w.word}</b>
                   <div className="mt-0.5 text-[13px] text-muted">
                     <InlineMeans w={w} />
@@ -382,7 +382,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
               <span className="absolute inset-y-0 left-0 w-[5px]" style={{ background: c.color }} />
               <div className="flex justify-between text-xs tabular-nums text-muted">
                 <span>{c.name}</span>
-                <span>No.{w.n}</span>
+                <span>No.{w.no}</span>
               </div>
               {badges?.[w.n] && (
                 <span
@@ -398,6 +398,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                 {/* 漢字表記は意味のヒントになるので表では出さず、めくった後（裏）にだけ表示する */}
                 <span className="flex flex-wrap justify-center gap-1.5">
                   <span className="rounded border border-line px-1.5 text-xs text-muted">{w.pos}</span>
+                  {w.rel && <span className="rounded bg-surface-2 px-1.5 text-xs font-bold text-muted">{REL_LABEL[w.rel]}</span>}
                   {homographHint(w) && (
                     <span className="rounded bg-surface-2 px-1.5 text-xs font-bold text-muted">{homographHint(w)}</span>
                   )}
@@ -413,6 +414,11 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                   {w.kanji && `${w.kanji}　`}
                   {w.pos}
                 </small>
+                {w.rel && w.parent && (
+                  <small className="w-full text-xs text-muted">
+                    {REL_LABEL[w.rel]}：<b className="font-word text-ink">{BYNUM.get(w.parent)?.word}</b>（No.{BYNUM.get(w.parent)?.no}）
+                  </small>
+                )}
               </div>
               {/* 意味が長いときはカードの中でスクロール */}
               <div className="mt-3 flex flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
@@ -464,7 +470,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                   <b className="font-word text-[17px] font-black">{o.word}</b>
                   <small className="text-xs text-muted">
                     {o.kanji && `［${o.kanji}］`}
-                    No.{o.n}
+                    No.{o.no}
                   </small>
                   {shared.length > 0 && (
                     <span className="ml-auto rounded bg-surface-2 px-1.5 text-[11px] text-muted">共通：{shared.slice(0, 2).join("・")}</span>
