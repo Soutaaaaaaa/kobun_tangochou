@@ -90,3 +90,17 @@ export function shuffle<T>(a: readonly T[]): T[] {
   }
   return b;
 }
+
+/**
+ * 漢字を伏せると同じ見た目になる語（きこゆ・おほす・まかる・よし・しるし）を見分けるための添え書き。
+ * 品詞が違えば品詞で見分けられるので null、品詞まで同じなら「敬語」「敬語以外」。
+ */
+const keyList = (w: Word) => w.word.split("・");
+const posHead = (p: string) => p.replace(/[・／].*$/, "");
+export function homographHint(w: Word): string | null {
+  const twins = WORDS.filter((o) => o.n !== w.n && keyList(o).some((k) => keyList(w).includes(k)));
+  if (!twins.length || twins.every((o) => posHead(o.pos) !== posHead(w.pos))) return null;
+  const keigo = (x: Word) => catOf(x.n).id === 3;
+  if (twins.some((o) => keigo(o) !== keigo(w))) return keigo(w) ? "敬語" : "敬語以外";
+  return `No.${w.n}`;
+}

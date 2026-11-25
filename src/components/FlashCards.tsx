@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { StudyMode } from "@/lib/progress";
-import { CIRC, catOf, type Word } from "@/lib/words";
+import { CIRC, catOf, homographHint, type Word } from "@/lib/words";
 import { InlineMeans, MeanText } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
@@ -277,8 +277,13 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
               )}
               <div className="flex flex-1 flex-col items-center justify-center gap-2.5 text-center">
                 <b className="break-all font-word text-[clamp(34px,11vw,52px)] font-black leading-tight tracking-wider">{w.word}</b>
-                {w.kanji && <span className="text-[15px] text-muted">{w.kanji}</span>}
-                <span className="rounded border border-line px-1.5 text-xs text-muted">{w.pos}</span>
+                {/* 漢字表記は意味のヒントになるので表では出さず、めくった後（裏）にだけ表示する */}
+                <span className="flex flex-wrap justify-center gap-1.5">
+                  <span className="rounded border border-line px-1.5 text-xs text-muted">{w.pos}</span>
+                  {homographHint(w) && (
+                    <span className="rounded bg-surface-2 px-1.5 text-xs font-bold text-muted">{homographHint(w)}</span>
+                  )}
+                </span>
               </div>
             </div>
             {/* 裏 */}

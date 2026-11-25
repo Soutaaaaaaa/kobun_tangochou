@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { distractors, type QuizDir } from "@/lib/distractors";
 import type { StudyMode } from "@/lib/progress";
-import { catOf, shuffle, type Word } from "@/lib/words";
+import { catOf, homographHint, shuffle, type Word } from "@/lib/words";
 import { InlineMeans, QuizMean, ShortMean } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
@@ -155,7 +155,12 @@ export default function Quiz({ items, format, title, recordMode, footer }: Props
           <>
             <span className="text-xs text-muted">この古語の意味は？</span>
             <div className="font-word text-[clamp(30px,9vw,42px)] font-black leading-tight">{t.word}</div>
-            <span className="justify-self-center rounded border border-line px-1.5 text-xs text-muted">{t.pos}</span>
+            {/* 漢字表記はヒントになるので解答後にだけ出す */}
+            {answered && t.kanji && <div className="text-[15px] text-muted">{t.kanji}</div>}
+            <span className="flex flex-wrap justify-center gap-1.5">
+              <span className="rounded border border-line px-1.5 text-xs text-muted">{t.pos}</span>
+              {homographHint(t) && <span className="rounded bg-surface-2 px-1.5 text-xs font-bold text-muted">{homographHint(t)}</span>}
+            </span>
           </>
         ) : (
           <>
@@ -185,10 +190,14 @@ export default function Quiz({ items, format, title, recordMode, footer }: Props
                   <span className="mt-1 block font-body text-xs font-normal text-muted">
                     {q.dir === "w2m" ? (
                       <>
-                        <b className="font-word text-sm text-ink">{o.word}</b>（No.{o.n}）
+                        <b className="font-word text-sm text-ink">{o.word}</b>
+                        {o.kanji && `［${o.kanji}］`}（No.{o.n}）
                       </>
                     ) : (
-                      <ShortMean w={o} />
+                      <>
+                        {o.kanji && <span className="mr-1 font-word text-ink">［{o.kanji}］</span>}
+                        <ShortMean w={o} />
+                      </>
                     )}
                   </span>
                 )}
