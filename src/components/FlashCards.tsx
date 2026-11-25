@@ -6,6 +6,7 @@ import type { StudyMode } from "@/lib/progress";
 import { clearSession, saveSession, type CardSave } from "@/lib/session-store";
 import { useSettings } from "@/lib/settings";
 import { similarWords } from "@/lib/similar";
+import { BOOKS } from "@/lib/books";
 import { TIPS } from "@/lib/tips";
 import TipBox from "./TipBox";
 import { BYNUM, CIRC, REL_LABEL, catOf, groupById, homographHint, noLabel, type Word } from "@/lib/words";
@@ -475,6 +476,9 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                     {o.kanji && `［${o.kanji}］`}
                     {noLabel(o)}
                   </small>
+                  {o.book !== w.book && (
+                    <span className="rounded bg-ai-soft px-1.5 text-[11px] font-bold text-ai">{BOOKS.find((b) => b.id === o.book)?.name}</span>
+                  )}
                   {shared.length > 0 && (
                     <span className="ml-auto rounded bg-surface-2 px-1.5 text-[11px] text-muted">共通：{shared.slice(0, 2).join("・")}</span>
                   )}
