@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { distractors, type QuizDir } from "@/lib/distractors";
 import type { StudyMode } from "@/lib/progress";
 import { clearSession, saveSession, type QuizSave } from "@/lib/session-store";
+import { useSettings } from "@/lib/settings";
+import { TIPS } from "@/lib/tips";
 import { BYNUM, catOf, homographHint, shuffle, type Word } from "@/lib/words";
 import { InlineMeans, QuizMean, ShortMean } from "./Mean";
 import { useProgress } from "./ProgressProvider";
@@ -42,6 +44,7 @@ const fromSave = (r: QuizSave): QuizItem[] =>
 
 export default function Quiz({ items, format, title, recordMode, footer, saveKey, saveHref, resume }: Props) {
   const { record } = useProgress();
+  const [{ showTips }] = useSettings();
   const [source, setSource] = useState(() => (resume ? fromSave(resume) : items));
   const [dirs, setDirs] = useState<QuizDir[] | undefined>(resume?.dirs);
   const questions = useMemo(() => makeQuestions(source, format, dirs), [source, format, dirs]);
@@ -153,6 +156,7 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
                   <div className="mt-0.5 text-[13px] text-muted">
                     <InlineMeans w={w} />
                   </div>
+                  {showTips && TIPS.get(w.n) && <p className="mt-1 text-[11.5px] leading-relaxed text-muted">コツ：{TIPS.get(w.n)}</p>}
                 </div>
               ))}
             </div>
@@ -291,6 +295,18 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
       <p className={`min-h-[1.6em] text-center font-bold ${right ? "text-take" : "text-shu"}`}>
         {answered && (right ? "正解！" : `不正解　正解は「${t.word}」`)}
       </p>
+      {answered && !right && showTips && TIPS.get(t.n) && (
+        <aside
+          aria-live="polite"
+          className="-mt-2 rounded-xl border border-dashed border-line bg-surface-2 px-3 py-2 text-[12px] leading-relaxed text-muted"
+        >
+          <span className="mr-1.5 font-bold text-ink">
+            覚え方のコツ <span className="font-word">{t.word}</span>
+            {t.kanji && <span className="ml-0.5 font-normal">［{t.kanji}］</span>}
+          </span>
+          {TIPS.get(t.n)}
+        </aside>
+      )}
       {answered && (
         <button ref={nextRef} className="btn btn-primary" onClick={next}>
           {i + 1 < questions.length ? "次の問題" : "結果を見る"}
