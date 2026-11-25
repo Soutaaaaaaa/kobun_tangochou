@@ -39,7 +39,7 @@ const toWords = (ns: number[]) => ns.map((n) => BYNUM.get(n)).filter((w): w is W
  */
 export default function FlashCards({ words, title, quizHref, recordMode = "card", badges, footer, saveKey, saveHref, resume }: Props) {
   const { record } = useProgress();
-  const [{ showTips }] = useSettings();
+  const [{ showTips, resumeMode }] = useSettings();
   const [deck, setDeck] = useState(() => (resume ? toWords(resume.words) : words));
   const [i, setI] = useState(resume?.i ?? 0);
   const [flipped, setFlipped] = useState(false);
@@ -264,7 +264,8 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
             覚えた {ok.length} 語・まだ {ng.length} 語
           </p>
           <p className="mt-1 text-xs text-muted">
-            ここまでの記録は保存されています。{saveKey && "トップ画面の「中断中の学習」からも続きを再開できます。"}
+            ここまでの記録は保存されています。
+            {saveKey && (resumeMode === "fresh" ? "（設定が「いつも最初から」なので、次に開くと最初から始まります）" : "トップ画面の「中断中の学習」からも続きを再開できます。")}
           </p>
         </section>
         <button className="btn btn-primary" onClick={() => setPaused(false)}>

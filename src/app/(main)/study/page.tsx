@@ -52,9 +52,11 @@ function Study() {
     setWords(list);
     const s = loadSession(`study:${key}`);
     const ok = s && s.kind === (mode === "quiz" ? "quiz" : "cards") ? s : null;
-    setSaved(ok);
-    // 設定で「たずねない」にしていれば、確認せずに続きから再開する
-    setResume(ok && !getSettings().askResume ? ok : null);
+    // 設定：ask＝たずねる／resume＝確認せずに続きから／fresh＝いつも最初から
+    const rm = getSettings().resumeMode;
+    if (ok && rm === "fresh") clearSession(`study:${key}`);
+    setSaved(rm === "fresh" ? null : ok);
+    setResume(ok && rm === "resume" ? ok : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, loading]);
 

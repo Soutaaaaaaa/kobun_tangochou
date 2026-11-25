@@ -9,11 +9,13 @@ import { ago, isKnown } from "@/lib/progress";
 import { BOOKS } from "@/lib/books";
 import { REVIEW_SIZE } from "@/lib/review";
 import { clearSession, listSessions } from "@/lib/session-store";
+import { useSettings } from "@/lib/settings";
 import { CATS, SECTIONS, WORDS, sectionWords } from "@/lib/words";
 
 export default function Home() {
   const { username, isAdmin, progress, loading } = useProgress();
   const [paused, setPaused] = useState<ReturnType<typeof listSessions>>([]);
+  const [{ resumeMode }] = useSettings();
   useEffect(() => setPaused(listSessions()), []);
   const known = WORDS.filter((w) => isKnown(progress.get(w.n))).length;
   const weak = WORDS.filter((w) => progress.get(w.n)?.is_weak).length;
@@ -60,7 +62,7 @@ export default function Home() {
       />
       <Page>
         <StreakCard />
-        {paused.length > 0 && (
+        {paused.length > 0 && resumeMode !== "fresh" && (
           <section className="grid gap-1.5">
             <h2 className="px-0.5 text-[13px] font-bold text-muted">中断中の学習</h2>
             <div className="panel overflow-hidden">

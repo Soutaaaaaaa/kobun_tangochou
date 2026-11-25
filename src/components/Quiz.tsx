@@ -45,7 +45,7 @@ const fromSave = (r: QuizSave): QuizItem[] =>
 
 export default function Quiz({ items, format, title, recordMode, footer, saveKey, saveHref, resume }: Props) {
   const { record } = useProgress();
-  const [{ showTips }] = useSettings();
+  const [{ showTips, resumeMode }] = useSettings();
   const [source, setSource] = useState(() => (resume ? fromSave(resume) : items));
   const [dirs, setDirs] = useState<QuizDir[] | undefined>(resume?.dirs);
   const questions = useMemo(() => makeQuestions(source, format, dirs), [source, format, dirs]);
@@ -89,7 +89,8 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
             全 {questions.length} 問中 {done} 問まで解答
           </p>
           <p className="mt-1 text-xs text-muted">
-            ここまでの記録は保存されています。{saveKey && "トップ画面の「中断中の学習」からも続きを再開できます。"}
+            ここまでの記録は保存されています。
+            {saveKey && (resumeMode === "fresh" ? "（設定が「いつも最初から」なので、次に開くと最初から始まります）" : "トップ画面の「中断中の学習」からも続きを再開できます。")}
           </p>
         </section>
         <button

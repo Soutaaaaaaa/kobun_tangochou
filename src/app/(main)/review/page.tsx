@@ -20,9 +20,14 @@ export default function ReviewPage() {
   const [resume, setResume] = useState<Saved | null>(null);
   useEffect(() => {
     const s = loadSession(SAVE_KEY);
+    const rm = getSettings().resumeMode;
+    // 設定：ask＝たずねる／resume＝確認せずに続きから／fresh＝いつも最初から
+    if (s && rm === "fresh") {
+      clearSession(SAVE_KEY);
+      return;
+    }
     setSaved(s);
-    // 設定で「たずねない」にしていれば、確認せずに続きから再開する
-    if (s && !getSettings().askResume) {
+    if (s && rm === "resume") {
       setResume(s);
       setStarted(true);
     }

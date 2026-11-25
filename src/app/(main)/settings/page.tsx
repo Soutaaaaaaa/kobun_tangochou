@@ -1,7 +1,7 @@
 "use client";
 
 import AppBar, { Page } from "@/components/AppBar";
-import { useSettings } from "@/lib/settings";
+import { useSettings, type ResumeMode } from "@/lib/settings";
 
 function Toggle({
   id,
@@ -52,13 +52,37 @@ export default function SettingsPage() {
             onChange={(v) => setSettings({ showTips: v })}
           />
           <hr className="border-line" />
-          <Toggle
-            id="ask-resume"
-            label="中断した続きから再開するか確認する"
-            desc="オンにすると、中断した単語カード・クイズ・今日の復習を開いたときに「続きから／最初から」を選ぶ画面を出します。オフにすると、確認せずに自動で続きから再開します。"
-            checked={settings.askResume}
-            onChange={(v) => setSettings({ askResume: v })}
-          />
+          <div className="grid gap-2">
+            <span className="grid gap-0.5 text-sm">
+              <span className="font-medium">中断した学習を開いたとき</span>
+              <span className="text-xs leading-relaxed text-muted">中断した単語カード・クイズ・今日の復習を、もう一度開いたときの動きを選びます。</span>
+            </span>
+            <div role="group" aria-label="中断した学習を開いたとき" className="grid grid-cols-3 gap-1.5">
+              {(
+                [
+                  ["ask", "毎回確認"],
+                  ["resume", "続きから"],
+                  ["fresh", "最初から"],
+                ] as [ResumeMode, string][]
+              ).map(([v, l]) => (
+                <button
+                  key={v}
+                  aria-pressed={settings.resumeMode === v}
+                  className="seg-btn flex min-h-[44px] items-center justify-center px-2"
+                  onClick={() => setSettings({ resumeMode: v })}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs leading-relaxed text-muted">
+              {settings.resumeMode === "ask"
+                ? "開くたびに「続きから／最初から」を選ぶ画面を出します。"
+                : settings.resumeMode === "resume"
+                  ? "確認せずに、自動で続きから再開します。"
+                  : "中断した続きは使わず、いつも最初から始めます（トップの「中断中の学習」も表示しません）。"}
+            </p>
+          </div>
         </section>
 
         <p className="px-0.5 text-[11px] text-muted">設定は、この端末のブラウザに保存されます。</p>

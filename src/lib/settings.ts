@@ -9,10 +9,11 @@ import { useCallback, useSyncExternalStore } from "react";
 export type Settings = {
   /** 覚え方のコツを表示する */
   showTips: boolean;
-  /** 中断した学習を開いたとき「続きから／最初から」をたずねる（false なら自動で続きから） */
-  askResume: boolean;
+  /** 中断した学習を開いたとき：ask＝毎回たずねる、resume＝自動で続きから、fresh＝いつも最初から */
+  resumeMode: ResumeMode;
 };
-const DEFAULTS: Settings = { showTips: true, askResume: true };
+export type ResumeMode = "ask" | "resume" | "fresh";
+const DEFAULTS: Settings = { showTips: true, resumeMode: "ask" };
 const KEY = "kobun-settings";
 
 let cache: Settings | null = null;
@@ -21,7 +22,11 @@ const listeners = new Set<() => void>();
 function read(): Settings {
   if (cache) return cache;
   try {
-    cache = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || "{}") };
+    const raw = JSON.parse(localStorage.getItem(KEY) || "{}");
+    // 以前の「確認する オン／オフ」の設定を引き継ぐ
+    if (raw.resumeMode === undefined && raw.askResume === false) raw.resumeMode = "resume";
+    delete raw.askResume;
+    cache = { ...DEFAULTS, ...raw };
   } catch {
     cache = DEFAULTS;
   }
