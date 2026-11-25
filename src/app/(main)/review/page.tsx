@@ -7,6 +7,7 @@ import { useProgress } from "@/components/ProgressProvider";
 import Quiz, { type QuizFormat, type QuizItem } from "@/components/Quiz";
 import { REVIEW_SIZE, buildTodayReview } from "@/lib/review";
 import { clearSession, loadSession, type Saved } from "@/lib/session-store";
+import { getSettings } from "@/lib/settings";
 
 const SAVE_KEY = "review";
 
@@ -17,7 +18,15 @@ export default function ReviewPage() {
   const [started, setStarted] = useState(false);
   const [saved, setSaved] = useState<Saved | null>(null);
   const [resume, setResume] = useState<Saved | null>(null);
-  useEffect(() => setSaved(loadSession(SAVE_KEY)), []);
+  useEffect(() => {
+    const s = loadSession(SAVE_KEY);
+    setSaved(s);
+    // 設定で「たずねない」にしていれば、確認せずに続きから再開する
+    if (s && !getSettings().askResume) {
+      setResume(s);
+      setStarted(true);
+    }
+  }, []);
 
   // 学習記録が読み込まれたら一度だけ組み立てる
   useEffect(() => {

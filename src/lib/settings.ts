@@ -6,8 +6,13 @@ import { useCallback, useSyncExternalStore } from "react";
  * 端末ごとの表示設定（このブラウザの localStorage に保存）。
  * 保存できない環境（プライベートモードなど）では既定値で動く。
  */
-export type Settings = { showTips: boolean };
-const DEFAULTS: Settings = { showTips: true };
+export type Settings = {
+  /** 覚え方のコツを表示する */
+  showTips: boolean;
+  /** 中断した学習を開いたとき「続きから／最初から」をたずねる（false なら自動で続きから） */
+  askResume: boolean;
+};
+const DEFAULTS: Settings = { showTips: true, askResume: true };
 const KEY = "kobun-settings";
 
 let cache: Settings | null = null;
@@ -37,6 +42,9 @@ function subscribe(fn: () => void) {
     window.removeEventListener("storage", onStorage);
   };
 }
+
+/** フックの外（useEffect の中など）で今の設定を読む */
+export const getSettings = (): Settings => read();
 
 export function useSettings(): [Settings, (patch: Partial<Settings>) => void] {
   const s = useSyncExternalStore(subscribe, read, () => DEFAULTS);

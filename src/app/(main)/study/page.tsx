@@ -8,6 +8,7 @@ import { useProgress } from "@/components/ProgressProvider";
 import Quiz, { type QuizFormat } from "@/components/Quiz";
 import { isKnown } from "@/lib/progress";
 import { clearSession, loadSession, type Saved } from "@/lib/session-store";
+import { getSettings } from "@/lib/settings";
 import { studyHref } from "@/lib/study-url";
 import { weightedByProgress } from "@/lib/weight";
 import { BYNUM, parseRanges, shuffle, wordsInRanges, type Word } from "@/lib/words";
@@ -50,8 +51,10 @@ function Study() {
     } else if (random) list = mix(list);
     setWords(list);
     const s = loadSession(`study:${key}`);
-    setSaved(s && s.kind === (mode === "quiz" ? "quiz" : "cards") ? s : null);
-    setResume(null);
+    const ok = s && s.kind === (mode === "quiz" ? "quiz" : "cards") ? s : null;
+    setSaved(ok);
+    // 設定で「たずねない」にしていれば、確認せずに続きから再開する
+    setResume(ok && !getSettings().askResume ? ok : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, loading]);
 
