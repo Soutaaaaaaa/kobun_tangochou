@@ -337,7 +337,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-2">
-        <div className="flex justify-between text-[13px] tabular-nums text-muted">
+        <div className="flex items-center justify-between text-[13px] tabular-nums text-muted">
           <span>
             {i + 1} / {deck.length}
           </span>
@@ -345,7 +345,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
             <span>
               <span className="font-bold text-take">覚えた {ok.length}</span>　<span className="font-bold text-shu">まだ {ng.length}</span>
             </span>
-            <button onClick={pause} className="rounded-md border border-line px-2 py-0.5 text-xs font-bold text-ink">
+            <button onClick={pause} className="flex h-9 items-center rounded-lg border border-line bg-surface px-4 text-sm font-bold text-ink">
               中断
             </button>
           </span>

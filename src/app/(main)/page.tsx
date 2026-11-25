@@ -26,29 +26,29 @@ export default function Home() {
       <AppBar
         title="古文単語400"
         right={
-          <div className="flex items-center gap-1.5 text-[13px]">
+          <div className="flex items-center gap-2 text-sm">
             {isAdmin && (
-              <Link href="/admin" className="rounded-md bg-ai-soft px-2 py-1 text-xs font-bold text-ai">
+              <Link href="/admin" className="flex h-10 items-center rounded-lg bg-ai-soft px-3 text-sm font-bold text-ai">
                 管理
               </Link>
             )}
             <Link
               href="/settings"
-              className="flex h-[26px] w-[30px] items-center justify-center rounded-md border border-line text-muted"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-line text-muted"
               title="設定"
               aria-label="設定"
             >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
               </svg>
             </Link>
             <Link
               href="/account"
-              className="flex max-w-[11em] items-center gap-1 rounded-md border border-line px-2 py-1 text-xs font-bold"
+              className="flex h-10 max-w-[10em] items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-bold"
               title="アカウント"
             >
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+              <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
                 <circle cx="12" cy="8" r="4" />
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6" strokeLinecap="round" />
               </svg>
@@ -72,13 +72,13 @@ export default function Home() {
                       {s.kind === "quiz" && `・正解 ${s.score}`}
                     </span>
                   </Link>
-                  <Link href={s.href} className="btn min-h-0 px-3 py-1.5 text-xs">
+                  <Link href={s.href} className="btn min-h-[40px] px-3.5 py-2 text-sm">
                     続きから
                   </Link>
                   <button
                     aria-label="破棄"
                     title="破棄する"
-                    className="px-1.5 text-lg leading-none text-muted"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg text-xl leading-none text-muted"
                     onClick={() => {
                       clearSession(s.key);
                       setPaused(listSessions());

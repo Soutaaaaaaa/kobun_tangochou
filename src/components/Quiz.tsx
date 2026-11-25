@@ -203,7 +203,7 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-2">
-        <div className="flex justify-between text-[13px] tabular-nums text-muted">
+        <div className="flex items-center justify-between text-[13px] tabular-nums text-muted">
           <span>
             {i + 1} / {questions.length}
           </span>
@@ -214,7 +214,7 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
                 setPaused(true);
                 window.scrollTo(0, 0);
               }}
-              className="rounded-md border border-line px-2 py-0.5 text-xs font-bold text-ink"
+              className="flex h-9 items-center rounded-lg border border-line bg-surface px-4 text-sm font-bold text-ink"
             >
               中断
             </button>
