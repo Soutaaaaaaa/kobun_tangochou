@@ -145,13 +145,13 @@ export default function Home() {
                 <div
                   key={b.id}
                   aria-disabled="true"
-                  className="panel relative grid min-h-[104px] content-between gap-2 overflow-hidden p-3"
+                  className="panel relative grid min-h-[128px] content-between gap-2 p-3 pb-4"
                 >
                   <span className="grid gap-0.5 opacity-55">
                     <b className="font-word text-[15px] font-black leading-tight">{b.name}</b>
                     <span className="text-[11px] text-muted">{b.sub}</span>
                   </span>
-                  <span className="kouji justify-self-center">工事中</span>
+                  <span className="kouji -mx-1 justify-self-center">工事中</span>
                   <span className="sr-only">（準備中のため、まだ使えません）</span>
                 </div>
               ),
