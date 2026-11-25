@@ -31,7 +31,7 @@ export default function Home() {
             <Link
               href="/account"
               className="flex max-w-[11em] items-center gap-1 rounded-md border border-line px-2 py-1 text-xs font-bold"
-              title="アカウント設定"
+              title="設定・アカウント"
             >
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
                 <circle cx="12" cy="8" r="4" />

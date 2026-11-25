@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { StudyMode } from "@/lib/progress";
+import { useSettings } from "@/lib/settings";
+import { TIPS } from "@/lib/tips";
 import { CIRC, catOf, homographHint, type Word } from "@/lib/words";
 import { InlineMeans, MeanText } from "./Mean";
 import { useProgress } from "./ProgressProvider";
@@ -26,6 +28,9 @@ type Props = {
  */
 export default function FlashCards({ words, title, quizHref, recordMode = "card", badges, footer }: Props) {
   const { record } = useProgress();
+  const [{ showTips }] = useSettings();
+  /** 直前に「まだ」にした語（覚え方のコツを出す） */
+  const [missed, setMissed] = useState<Word | null>(null);
   const [deck, setDeck] = useState(words);
   const [i, setI] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -71,6 +76,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
     setOk([]);
     setNg([]);
     setFlipped(false);
+    setMissed(null);
     busy.current = false;
   };
 
@@ -86,6 +92,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
       busy.current = true;
       record(w.n, isOk, recordMode);
       (isOk ? setOk : setNg)((l) => [...l, w]);
+      setMissed(isOk ? null : w);
       const el = cardRef.current;
       if (el) {
         const dir = isOk ? -1 : 1;
@@ -206,6 +213,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                   <div className="mt-0.5 text-[13px] text-muted">
                     <InlineMeans w={w} />
                   </div>
+                  {showTips && TIPS.get(w.n) && <p className="mt-1 text-[11.5px] leading-relaxed text-muted">コツ：{TIPS.get(w.n)}</p>}
                 </div>
               ))}
             </div>
@@ -310,6 +318,20 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
           </div>
         </div>
       </div>
+
+      {showTips && missed && TIPS.get(missed.n) && (
+        <aside
+          key={missed.n}
+          aria-live="polite"
+          className="-mt-1 rounded-xl border border-dashed border-line bg-surface-2 px-3 py-2 text-[12px] leading-relaxed text-muted"
+        >
+          <span className="mr-1.5 font-bold text-ink">
+            覚え方のコツ <span className="font-word">{missed.word}</span>
+            <span className="ml-1 text-[11px] font-normal tabular-nums">No.{missed.n}</span>
+          </span>
+          {TIPS.get(missed.n)}
+        </aside>
+      )}
 
       <p className="text-center text-xs text-muted">
         {flipped ? "← 合っていたら左へ　／　間違えたら右へ →" : "フリック（またはタップ）でめくる"}

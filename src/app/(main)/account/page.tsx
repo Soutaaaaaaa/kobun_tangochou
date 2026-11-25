@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { changePassword, changeUsername, logout, type AuthState } from "../../auth-actions";
 import AppBar, { Page } from "@/components/AppBar";
 import { useProgress } from "@/components/ProgressProvider";
+import { useSettings } from "@/lib/settings";
 
 function Result({ state }: { state: AuthState }) {
   if (state.error)
@@ -25,10 +26,11 @@ export default function AccountPage() {
   const { username, isAdmin } = useProgress();
   const [nameState, nameAction, namePending] = useActionState(changeUsername, {});
   const [pwState, pwAction, pwPending] = useActionState(changePassword, {});
+  const [settings, setSettings] = useSettings();
 
   return (
     <>
-      <AppBar title="アカウント設定" back="/" />
+      <AppBar title="設定" back="/" />
       <Page>
         <section className="panel grid gap-1 p-4">
           <span className="text-[13px] text-muted">ログイン中のアカウント</span>
@@ -36,6 +38,29 @@ export default function AccountPage() {
             {username}
             {isAdmin && <span className="rounded bg-ai-soft px-1.5 py-0.5 font-body text-[11px] font-bold text-ai">管理者</span>}
           </p>
+        </section>
+
+        <section className="panel grid gap-3 p-4">
+          <h2 className="font-bold">学習の設定</h2>
+          <label className="flex cursor-pointer items-start justify-between gap-4">
+            <span className="grid gap-0.5 text-sm">
+              <span className="font-medium">覚え方のコツを表示</span>
+              <span className="text-xs text-muted">単語カードで「まだ」にした単語に、語源や見分け方などのコツを小さく表示します。</span>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              id="show-tips"
+              className="peer sr-only"
+              checked={settings.showTips}
+              onChange={(e) => setSettings({ showTips: e.target.checked })}
+            />
+            <span
+              aria-hidden
+              className="relative mt-0.5 h-7 w-12 shrink-0 rounded-full bg-line transition-colors after:absolute after:left-1 after:top-1 after:h-5 after:w-5 after:rounded-full after:bg-surface after:shadow after:transition-transform peer-checked:bg-ai peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-ai"
+            />
+          </label>
+          <p className="text-[11px] text-muted">この設定は、この端末のブラウザに保存されます。</p>
         </section>
 
         <form action={nameAction} className="panel grid gap-3 p-4">
