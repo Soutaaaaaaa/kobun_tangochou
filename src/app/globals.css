@@ -36,6 +36,18 @@ body {
   -webkit-tap-highlight-color: transparent;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+/* 「工事中」ステッカー（黄色と黒の標識。ライト・ダークとも同じ色） */
+.kouji {
+  display: inline-flex; align-items: center; gap: .3em;
+  padding: .45em .7em .4em; border-radius: 4px;
+  background:
+    repeating-linear-gradient(-45deg, #1d1d1d 0 6px, #f5c400 6px 12px) top / 100% 5px no-repeat,
+    repeating-linear-gradient(-45deg, #1d1d1d 0 6px, #f5c400 6px 12px) bottom / 100% 5px no-repeat,
+    #f5c400;
+  color: #1d1d1d; font-weight: 900; font-size: 12px; letter-spacing: .08em; line-height: 1;
+  box-shadow: 0 1px 0 rgba(0,0,0,.15), 0 3px 8px rgba(0,0,0,.18);
+  transform: rotate(-7deg);
+}
 button { cursor: pointer; }
 button:disabled { cursor: default; }
 :focus-visible { outline: 2px solid var(--ai); outline-offset: 2px; }

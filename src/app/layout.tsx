@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "古文単語400",
-  description: "古文単語400語の単語カード・四択クイズ・今日の復習",
+  title: "古典学習帳",
+  description: "古文単語・漢文の単語カード・四択クイズ・今日の復習",
 };
 
 export const viewport: Viewport = {

@@ -6,6 +6,7 @@ import AppBar, { Page } from "@/components/AppBar";
 import { useProgress } from "@/components/ProgressProvider";
 import StreakCard from "@/components/StreakCard";
 import { ago, isKnown } from "@/lib/progress";
+import { BOOKS } from "@/lib/books";
 import { REVIEW_SIZE } from "@/lib/review";
 import { clearSession, listSessions } from "@/lib/session-store";
 import { CATS, SECTIONS, WORDS, sectionWords } from "@/lib/words";
@@ -24,7 +25,7 @@ export default function Home() {
   return (
     <>
       <AppBar
-        title="古文単語400"
+        title="古典学習帳"
         right={
           <div className="flex items-center gap-2 text-sm">
             {isAdmin && (
@@ -115,6 +116,52 @@ export default function Home() {
           </div>
         </section>
 
+        {/* 単語帳（古文単語315・体系漢文は工事中） */}
+        <section className="grid gap-1.5">
+          <h2 className="px-0.5 text-[13px] font-bold text-muted">単語帳</h2>
+          <div className="grid grid-cols-3 gap-2">
+            {BOOKS.map((b) =>
+              b.ready ? (
+                <a
+                  key={b.id}
+                  href={`#${b.id}`}
+                  className="panel relative grid content-between gap-2 border-[1.5px] border-ai p-3"
+                  aria-current="true"
+                >
+                  <span className="grid gap-0.5">
+                    <b className="font-word text-[15px] font-black leading-tight">{b.name}</b>
+                    <span className="text-[11px] text-muted">{b.sub}</span>
+                  </span>
+                  <span className="grid gap-1">
+                    <span className="text-[11px] tabular-nums text-muted">
+                      <b className="text-sm text-ink">{loading ? "–" : known}</b>/400 語
+                    </span>
+                    <span className="meter h-[5px]">
+                      <i style={{ width: `${known / 4}%` }} />
+                    </span>
+                  </span>
+                </a>
+              ) : (
+                <div
+                  key={b.id}
+                  aria-disabled="true"
+                  className="panel relative grid min-h-[104px] content-between gap-2 overflow-hidden p-3"
+                >
+                  <span className="grid gap-0.5 opacity-55">
+                    <b className="font-word text-[15px] font-black leading-tight">{b.name}</b>
+                    <span className="text-[11px] text-muted">{b.sub}</span>
+                  </span>
+                  <span className="kouji justify-self-center">工事中</span>
+                  <span className="sr-only">（準備中のため、まだ使えません）</span>
+                </div>
+              ),
+            )}
+          </div>
+        </section>
+
+        <h2 id="kobun400" className="scroll-mt-16 px-0.5 pt-2 font-word text-xl font-black">
+          古文単語400
+        </h2>
         {CATS.map((c) => {
           const secs = SECTIONS.filter((s) => s.cat === c);
           const cw = WORDS.filter((w) => w.n >= c.from && w.n <= c.to);

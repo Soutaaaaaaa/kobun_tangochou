@@ -15,7 +15,7 @@ export default function AuthForm({ mode, action }: Props) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 px-4 py-10 pt-[max(2.5rem,env(safe-area-inset-top))]">
       <div className="text-center">
-        <p className="font-word text-4xl font-black tracking-wider">古文単語400</p>
+        <p className="font-word text-4xl font-black tracking-wider">古典学習帳</p>
         <p className="mt-1 text-sm text-muted">{signup ? "アカウントを作成" : "ログイン"}</p>
       </div>
       <form action={formAction} className="panel grid gap-4 p-5">

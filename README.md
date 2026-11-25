@@ -1,6 +1,6 @@
-# 古文単語400
+# 古典学習帳
 
-古文単語400語（No.1–400）を学ぶアプリ。Next.js (App Router) + TypeScript + Tailwind CSS + Supabase。スマホ表示を優先しています。
+古典の単語を学ぶアプリ。いまは古文単語400語（No.1–400）が使えます（古文単語315・体系漢文は工事中）。Next.js (App Router) + TypeScript + Tailwind CSS + Supabase。スマホ表示を優先しています。
 
 ## できること
 
