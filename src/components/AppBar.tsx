@@ -22,9 +22,9 @@ export default function AppBar({ title, back, right }: Props) {
                   router.back();
                 }
               }}
-              className="flex items-center py-1.5 pr-2 text-[15px] text-ai"
+              className="-ml-1 flex h-10 shrink-0 items-center gap-0.5 rounded-lg border border-line pl-1.5 pr-3 text-[15px] font-bold text-ai"
             >
-              <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M15 18l-6-6 6-6" />
               </svg>
               戻る
