@@ -20,7 +20,7 @@ export default function Home() {
   // 覚えた数・苦手の数は、選んでいる単語帳の見出し語で数える（関連語は数えない）
   const knownOf = (b: BookId) => headwords(b).filter((w) => isKnown(progress.get(w.n))).length;
   const known = knownOf(book);
-  const total = BOOK_SIZE[book];
+  const total = headwords(book).length;
   const bookName = BOOKS.find((b) => b.id === book)?.name ?? "";
   const weak = headwords(book).filter((w) => progress.get(w.n)?.is_weak).length;
   const lastStudied = [...progress.values()].reduce<string | null>(
@@ -147,10 +147,10 @@ export default function Home() {
                   </span>
                   <span className="grid gap-1">
                     <span className="text-[11px] tabular-nums text-muted">
-                      <b className="text-sm text-ink">{loading ? "–" : knownOf(b.id as BookId)}</b>/{BOOK_SIZE[b.id as BookId]} 語
+                      <b className="text-sm text-ink">{loading ? "–" : knownOf(b.id as BookId)}</b>/{headwords(b.id as BookId).length} 語
                     </span>
                     <span className="meter h-[5px]">
-                      <i style={{ width: `${(knownOf(b.id as BookId) / BOOK_SIZE[b.id as BookId]) * 100}%` }} />
+                      <i style={{ width: `${(knownOf(b.id as BookId) / headwords(b.id as BookId).length) * 100}%` }} />
                     </span>
                   </span>
                 </button>

@@ -35,18 +35,22 @@ export const WORDS400: Word[] = WORDS_RAW.trim()
 
 /* ---------- 古文単語315 ---------- */
 export const ID315 = (head: number, k = 0) => 10000 + head * 10 + k;
+/** "94" → 見出し語、"94.a" → 関連語 a の n */
+export const id315OfNo = (no: string) => {
+  const [h, letter] = no.split(".");
+  return ID315(Number(h), letter ? letter.charCodeAt(0) - 96 : 0);
+};
 const RELS: RelKind[] = ["関", "同", "反", "類"];
 export const WORDS315: Word[] = WORDS315_RAW.trim()
   .split("\n")
   .map((line) => {
     const [no, mark, word, kanji, pos, m] = line.split("|");
-    const [h, letter] = no.split(".");
-    const head = Number(h);
-    const k = letter ? letter.charCodeAt(0) - 96 : 0;
+    const head = Number(no.split(".")[0]);
     const rel = RELS.find((r) => r === mark);
     return {
-      n: ID315(head, k),
-      no,
+      n: id315OfNo(no),
+      // 「分」＝同じ番号のもう一つの見出し語（なやむ・まうづ など）。番号は見出し語と同じに見せる
+      no: mark === "分" ? String(head) : no,
       book: "kobun315",
       head,
       ...(rel ? { rel, parent: ID315(head) } : {}),
