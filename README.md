@@ -27,6 +27,7 @@
 
 1. [Supabase](https://supabase.com) でプロジェクトを作成。
 2. **SQL Editor** で `supabase/migrations/` の `0001_init.sql` → `0002_grants.sql` → `0003_account_admin.sql` → `0004_weak_streak.sql` → `0005_study_days.sql` → `0006_kobun315.sql` の順に中身を実行（テーブル・RLS・関数・権限・管理者機能を作成）。
+   - GitHub の Secrets に `SUPABASE_ACCESS_TOKEN` と `SUPABASE_DB_PASSWORD` を登録しておけば、`supabase/migrations/` に追加した SQL は GitHub Actions（`.github/workflows/supabase-migrate.yml`）が push のたびに自動で実行する（実行済みのものは実行しない）。
 3. **Authentication → Sign In / Providers → Email** で **「Confirm email」をオフ** にする。
    - Supabase のログインはメールアドレスが必須なので、アプリ内部では `…@kobun-tango.local` という実在しないアドレスを作って使っています（メールは送られません）。ログイン時はアカウント名からこのアドレスを引くので、アカウント名を変えてもログインできます。
    - もし Supabase がこのアドレスを受け付けない場合は、環境変数 `NEXT_PUBLIC_AUTH_EMAIL_DOMAIN` で別のドメインを指定してください。

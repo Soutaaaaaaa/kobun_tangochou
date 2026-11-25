@@ -1,0 +1,2 @@
+# Supabase CLI の設定（GitHub Actions で SQL を自動実行するために必要な最小限）
+project_id = "kobun-tango"
