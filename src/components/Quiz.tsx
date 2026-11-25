@@ -8,6 +8,7 @@ import { clearSession, saveSession, type QuizSave } from "@/lib/session-store";
 import { useSettings } from "@/lib/settings";
 import { TIPS } from "@/lib/tips";
 import TipBox from "./TipBox";
+import SimilarList from "./SimilarList";
 import { BYNUM, REL_LABEL, catOf, homographHint, noLabel, shuffle, type Word } from "@/lib/words";
 import { InlineMeans, QuizMean, ShortMean } from "./Mean";
 import { useProgress } from "./ProgressProvider";
@@ -304,6 +305,8 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
           {i + 1 < questions.length ? "次の問題" : "結果を見る"}
         </button>
       )}
+      {/* 答えた後：意味が近い単語（下にスクロールすると見える） */}
+      {answered && <SimilarList w={t} />}
     </div>
   );
 }
