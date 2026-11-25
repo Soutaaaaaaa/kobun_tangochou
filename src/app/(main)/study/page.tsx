@@ -11,7 +11,7 @@ import { clearSession, loadSession, type Saved } from "@/lib/session-store";
 import { getSettings } from "@/lib/settings";
 import { studyHref } from "@/lib/study-url";
 import { weightedByProgress } from "@/lib/weight";
-import { BOOK_SIZE, BYNUM, isBookId, parseRanges, shuffle, wordsInRanges, type Word } from "@/lib/words";
+import { BYNUM, rangeMax, isBookId, parseRanges, shuffle, wordsInRanges, type Word } from "@/lib/words";
 
 function Study() {
   const params = useSearchParams();
@@ -31,7 +31,7 @@ function Study() {
     if (loading) return;
     const p = new URLSearchParams(key);
     const bk = isBookId(p.get("b")) ? (p.get("b") as "kobun315") : "kobun400";
-    const ranges = parseRanges(p.get("r"), BOOK_SIZE[bk]);
+    const ranges = parseRanges(p.get("r"), rangeMax(bk));
     let list: Word[] = p.get("ids")
       ? p
           .get("ids")!
@@ -62,7 +62,7 @@ function Study() {
   }, [key, loading]);
 
   const book = isBookId(params.get("b")) ? (params.get("b") as "kobun315") : "kobun400";
-  const ranges = parseRanges(params.get("r"), BOOK_SIZE[book]);
+  const ranges = parseRanges(params.get("r"), rangeMax(book));
   const rel = params.get("rel") === "1";
   return (
     <>

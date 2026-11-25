@@ -8,7 +8,7 @@ import { useSettings } from "@/lib/settings";
 import { similarWords } from "@/lib/similar";
 import { TIPS } from "@/lib/tips";
 import TipBox from "./TipBox";
-import { BYNUM, CIRC, REL_LABEL, catOf, homographHint, type Word } from "@/lib/words";
+import { BYNUM, CIRC, REL_LABEL, catOf, groupById, homographHint, noLabel, type Word } from "@/lib/words";
 import { InlineMeans, MeanText } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
@@ -382,7 +382,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
               <span className="absolute inset-y-0 left-0 w-[5px]" style={{ background: c.color }} />
               <div className="flex justify-between text-xs tabular-nums text-muted">
                 <span>{c.name}</span>
-                <span>No.{w.no}</span>
+                <span>{noLabel(w)}</span>
               </div>
               {badges?.[w.n] && (
                 <span
@@ -419,6 +419,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                     {REL_LABEL[w.rel]}：<b className="font-word text-ink">{BYNUM.get(w.parent)?.word}</b>（No.{BYNUM.get(w.parent)?.no}）
                   </small>
                 )}
+                {w.extra && <small className="w-full text-xs text-muted">グループ：{groupById(w.group)?.title}</small>}
               </div>
               {/* 意味が長いときはカードの中でスクロール */}
               <div className="mt-3 flex flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
@@ -444,7 +445,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
 
       <p className="whitespace-pre-line text-center text-xs text-muted">
         {flipped
-          ? `← 合っていたら左へ　／　間違えたら右へ →${similar.length ? "\n下にスクロールすると似た意味の単語" : ""}`
+          ? `← 合っていたら左へ　／　間違えたら右へ →${similar.length ? (w.extra ? "\n下にスクロールすると同じグループの言葉" : "\n下にスクロールすると似た意味の単語") : ""}`
           : "フリック（またはタップ）でめくる"}
       </p>
       <div className="grid grid-cols-3 gap-2">
@@ -462,7 +463,9 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
       {/* めくった後だけ：似た意味の単語（下にスクロールすると見える） */}
       {flipped && similar.length > 0 && (
         <section className="grid gap-1.5 pt-2">
-          <h3 className="px-0.5 text-[13px] font-bold text-muted">「{w.word}」と似た意味の単語</h3>
+          <h3 className="px-0.5 text-[13px] font-bold text-muted">
+            {w.extra ? `同じグループ（${groupById(w.group)?.title}）の言葉` : `「${w.word}」と似た意味の単語`}
+          </h3>
           <div className="panel overflow-hidden">
             {similar.map(({ word: o, shared }) => (
               <div key={o.n} className="border-t border-line px-3.5 py-2.5 first:border-t-0">
@@ -470,7 +473,7 @@ export default function FlashCards({ words, title, quizHref, recordMode = "card"
                   <b className="font-word text-[17px] font-black">{o.word}</b>
                   <small className="text-xs text-muted">
                     {o.kanji && `［${o.kanji}］`}
-                    No.{o.no}
+                    {noLabel(o)}
                   </small>
                   {shared.length > 0 && (
                     <span className="ml-auto rounded bg-surface-2 px-1.5 text-[11px] text-muted">共通：{shared.slice(0, 2).join("・")}</span>

@@ -9,7 +9,7 @@ import { studyHref } from "@/lib/study-url";
 import RelatedToggle from "@/components/RelatedToggle";
 import { BOOKS } from "@/lib/books";
 import { useSettings } from "@/lib/settings";
-import { BOOK_SIZE, bookCats, bookSections, isBookId, sectionById, wordsInRanges, type Range } from "@/lib/words";
+import { BOOK_SIZE, bookCats, bookSections, isBookId, sectionById, sectionWords, wordsInRanges, type Range } from "@/lib/words";
 
 type Tab = "pick" | "number";
 
@@ -100,7 +100,7 @@ function RandomForm() {
     for (const s of SECTIONS)
       if (picked.has(`s${s.id}`) && !picked.has(`c${s.cat.id}`)) {
         rs.push([s.from, s.to]);
-        names.push(`S${s.num}`);
+        names.push(s.extra ? `おまけ${s.num}` : `S${s.num}`);
       }
     return { ranges: mergeRanges(rs), label: names.join("・") || "未選択" };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,9 +158,11 @@ function RandomForm() {
                 {CATS.map((c) => (
                   <button key={c.id} className="seg-btn" aria-pressed={picked.has(`c${c.id}`)} onClick={() => toggle(`c${c.id}`)}>
                     {c.name}
-                    <small className="ml-1 tabular-nums text-muted">
-                      {c.from}–{c.to}
-                    </small>
+                    {!c.extra && (
+                      <small className="ml-1 tabular-nums text-muted">
+                        {c.from}–{c.to}
+                      </small>
+                    )}
                   </button>
                 ))}
               </div>
@@ -181,9 +183,9 @@ function RandomForm() {
                         disabled={viaCat}
                         onClick={() => toggle(`s${s.id}`)}
                       >
-                        <span className="block">S{s.num}</span>
+                        <span className="block">{s.extra ? `おまけ${s.num}` : `S${s.num}`}</span>
                         <small className="tabular-nums text-muted">
-                          {s.from}–{s.to}
+                          {s.extra ? `${sectionWords(s).length}語` : `${s.from}–${s.to}`}
                         </small>
                       </button>
                     );

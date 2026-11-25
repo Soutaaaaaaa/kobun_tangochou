@@ -47,7 +47,13 @@ const CACHE = new Map<number, { word: Word; shared: string[] }[]>();
 
 export function similarWords(w: Word, max = 5): { word: Word; shared: string[] }[] {
   if (CACHE.has(w.n)) return CACHE.get(w.n)!;
-  const out = BOOK_WORDS[w.book].filter((o) => o.n !== w.n && !keys(o).some((k) => keys(w).includes(k)))
+  // おまけは同じグループの言葉を出す
+  if (w.extra) {
+    const out = BOOK_WORDS[w.book].filter((o) => o.group === w.group && o.n !== w.n).slice(0, 8).map((o) => ({ word: o, shared: [] }));
+    CACHE.set(w.n, out);
+    return out;
+  }
+  const out = BOOK_WORDS[w.book].filter((o) => !o.extra && o.n !== w.n && !keys(o).some((k) => keys(w).includes(k)))
     .map((o) => ({ word: o, ...score(w, o) }))
     .filter((x) => x.s >= 1)
     .sort((a, b) => b.s - a.s || Math.abs(a.word.n - w.n) - Math.abs(b.word.n - w.n))

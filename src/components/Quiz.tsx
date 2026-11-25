@@ -8,7 +8,7 @@ import { clearSession, saveSession, type QuizSave } from "@/lib/session-store";
 import { useSettings } from "@/lib/settings";
 import { TIPS } from "@/lib/tips";
 import TipBox from "./TipBox";
-import { BYNUM, REL_LABEL, catOf, homographHint, shuffle, type Word } from "@/lib/words";
+import { BYNUM, REL_LABEL, catOf, homographHint, noLabel, shuffle, type Word } from "@/lib/words";
 import { InlineMeans, QuizMean, ShortMean } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
@@ -279,7 +279,7 @@ export default function Quiz({ items, format, title, recordMode, footer, saveKey
                     {q.dir === "w2m" ? (
                       <>
                         <b className="font-word text-sm text-ink">{o.word}</b>
-                        {o.kanji && `［${o.kanji}］`}（No.{o.no}）
+                        {o.kanji && `［${o.kanji}］`}（{noLabel(o)}）
                       </>
                     ) : (
                       <>

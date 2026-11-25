@@ -9,11 +9,14 @@ import { REVIEW_SIZE, buildTodayReview } from "@/lib/review";
 import { clearSession, loadSession, type Saved } from "@/lib/session-store";
 import { getSettings, useSettings } from "@/lib/settings";
 import { BOOK_WORDS, isBookId, type BookId } from "@/lib/words";
+import type { ProgressMap } from "@/lib/progress";
 import { BOOKS } from "@/lib/books";
 
 /** 中断の保存キー（古文単語400 は従来どおり "review"） */
 const saveKeyOf = (b: BookId) => (b === "kobun400" ? "review" : `review-${b}`);
-const poolOf = (b: BookId, rel: boolean) => BOOK_WORDS[b].filter((w) => rel || !w.rel);
+/** 復習に出す語。おまけ（慣用句など）は、一度でも学習したものだけ */
+const poolOf = (b: BookId, rel: boolean, progress: ProgressMap) =>
+  BOOK_WORDS[b].filter((w) => (rel || !w.rel) && (!w.extra || progress.has(w.n)));
 
 export default function ReviewPage() {
   const { progress, loading } = useProgress();
@@ -57,7 +60,7 @@ export default function ReviewPage() {
 
   // 学習記録が読み込まれたら一度だけ組み立てる
   useEffect(() => {
-    if (!loading && items === null) setItems(buildTodayReview(progress, REVIEW_SIZE, Date.now(), poolOf(book, rel)));
+    if (!loading && items === null) setItems(buildTodayReview(progress, REVIEW_SIZE, Date.now(), poolOf(book, rel, progress)));
   }, [loading, progress, items, book, rel]);
 
   const counts = items
@@ -72,7 +75,7 @@ export default function ReviewPage() {
     <button
       className="btn"
       onClick={() => {
-        setItems(buildTodayReview(progress, REVIEW_SIZE, Date.now(), poolOf(book, rel)));
+        setItems(buildTodayReview(progress, REVIEW_SIZE, Date.now(), poolOf(book, rel, progress)));
         clearSession(SAVE_KEY);
         setSaved(null);
         setResume(null);

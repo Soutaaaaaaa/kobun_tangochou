@@ -1,7 +1,8 @@
 "use client";
 
 import { ago, isKnown, type WordProgress } from "@/lib/progress";
-import { REL_LABEL, type Word } from "@/lib/words";
+import { Fragment } from "react";
+import { REL_LABEL, groupById, type Word } from "@/lib/words";
 import { InlineMeans } from "./Mean";
 import { useProgress } from "./ProgressProvider";
 
@@ -15,14 +16,21 @@ export default function WordList({ words, showHistory = true }: { words: Word[];
   const { progress, setWeak } = useProgress();
   return (
     <div className="panel overflow-hidden">
-      {words.map((w) => {
+      {words.map((w, i) => {
         const p = progress.get(w.n);
+        // おまけ：グループが変わるところに見出しを入れる
+        const groupHead = w.group && w.group !== words[i - 1]?.group ? groupById(w.group) : undefined;
         return (
+          <Fragment key={w.n}>
+          {groupHead && (
+            <div className="border-t border-line bg-surface-2 px-3.5 py-2 text-[13px] font-bold first:border-t-0">{groupHead.title}</div>
+          )}
           <div
-            key={w.n}
             className={`grid grid-cols-[4.2ch_1fr_auto] items-start gap-2.5 border-t border-line px-3.5 py-2.5 first:border-t-0 ${w.rel ? "bg-surface-2/60" : ""}`}
           >
-            <span className={`pt-1 text-xs tabular-nums text-muted ${w.rel ? "pl-1" : ""}`}>{w.no}</span>
+            <span className={`pt-1 text-xs tabular-nums text-muted ${w.rel ? "pl-1" : ""}`} title={w.extra ? w.no : undefined}>
+              {w.extra ?? w.no}
+            </span>
             <div className="min-w-0">
               <div className="flex flex-wrap items-baseline gap-x-1.5">
                 {w.rel && (
@@ -61,6 +69,7 @@ export default function WordList({ words, showHistory = true }: { words: Word[];
               </button>
             </div>
           </div>
+          </Fragment>
         );
       })}
     </div>

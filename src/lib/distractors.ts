@@ -80,6 +80,7 @@ function lev(a: string, b: string): number {
  * 反対語（うしろめたし／うしろやすし など）だけは、まぎらわしい誤答として使う。
  */
 function sameFamily(a: Word, b: Word): boolean {
+  // おまけは同じグループ（head が同じ）の語を選択肢にしない
   if (a.book !== "kobun315" || a.head !== b.head) return false;
   return a.rel !== "反" && b.rel !== "反";
 }
@@ -92,6 +93,8 @@ export function distractors(t: Word, dir: QuizDir): Word[] {
   const tk = keysOf(t)[0];
   const scored: [number, Word][] = [];
   for (const c of BOOK_WORDS[t.book]) {
+    // おまけ（慣用句など）は、おまけの中だけで選択肢を作る
+    if (!!c.extra !== !!t.extra) continue;
     if (c.n === t.n || conflicts(t, c)) continue;
     // 同じ番号の見出し語と関連語は意味が近いので選択肢にしない（反対語は除く）
     if (sameFamily(t, c)) continue;

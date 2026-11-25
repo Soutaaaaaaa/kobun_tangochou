@@ -10,7 +10,7 @@ import { BOOKS } from "@/lib/books";
 import { REVIEW_SIZE } from "@/lib/review";
 import { clearSession, listSessions } from "@/lib/session-store";
 import { useSettings } from "@/lib/settings";
-import { BOOK_SIZE, bookCats, bookSections, headwords, sectionWords, type BookId } from "@/lib/words";
+import { bookCats, bookSections, catWords, headwords, sectionGroups, sectionWords, type BookId } from "@/lib/words";
 
 export default function Home() {
   const { username, isAdmin, progress, loading } = useProgress();
@@ -177,13 +177,16 @@ export default function Home() {
         </h2>
         {bookCats(book).map((c) => {
           const secs = bookSections(book).filter((s) => s.cat === c);
-          const cw = headwords(book).filter((w) => w.head >= c.from && w.head <= c.to);
+          const cw = catWords(c);
           return (
             <section key={c.id} className="grid gap-2" style={{ ["--cc" as string]: c.color }}>
               <div className="flex items-baseline gap-2.5 px-0.5 pt-1">
-                <h2 className="chip-dot text-[17px] font-bold">{book === "kobun315" ? "セクション" : c.name}</h2>
+                <h2 className="chip-dot text-[17px] font-bold">
+                  {c.extra ? "おまけ（慣用句・言い換え）" : book === "kobun315" ? "セクション" : c.name}
+                </h2>
                 <span className="text-[13px] tabular-nums text-muted">
-                  No.{c.from}–{c.to}　{cw.filter((w) => isKnown(progress.get(w.n))).length}/{cw.length}
+                  {!c.extra && `No.${c.from}–${c.to}　`}
+                  {cw.filter((w) => isKnown(progress.get(w.n))).length}/{cw.length}
                 </span>
               </div>
               <div className="panel overflow-hidden">
@@ -201,12 +204,17 @@ export default function Home() {
                       </span>
                       <span className="grid min-w-0 gap-1">
                         <span className="text-sm font-bold">
-                          セクション {s.num}
+                          {s.extra ? "おまけ" : "セクション"} {s.num}
                           <small className="ml-1.5 font-normal tabular-nums text-muted">
-                            No.{s.from}–{s.to}・{ws.length}語
+                            {!s.extra && `No.${s.from}–${s.to}・`}
+                            {ws.length}語
                           </small>
                         </span>
-                        <span className="truncate text-xs text-muted">{ws.slice(0, 6).map((w) => w.word).join("・")}…</span>
+                        <span className="truncate text-xs text-muted">
+                          {s.extra
+                            ? sectionGroups(s).map((g) => g.title).join("／")
+                            : `${ws.slice(0, 6).map((w) => w.word).join("・")}…`}
+                        </span>
                         <span className="meter h-[5px]">
                           <i style={{ width: `${(k / ws.length) * 100}%` }} />
                         </span>
