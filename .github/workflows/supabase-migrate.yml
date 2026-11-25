@@ -35,7 +35,7 @@ jobs:
       # 0001〜0005 は手で実行済みなので「実行済み」として記録する（何度やっても同じ結果になる）。
       # 0006 以降はここに入れない（まだ実行していなければ、次の db push で実行される）。
       - name: 手で実行済みの SQL を記録
-        run: supabase migration repair --status applied 0001 0002 0003 0004 0005 --remote
+        run: supabase migration repair --status applied 0001 0002 0003 0004 0005 --remote --yes
 
       - name: まだ実行していない SQL を一覧
         run: supabase migration list --remote
