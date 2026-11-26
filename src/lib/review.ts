@@ -7,6 +7,8 @@ export type ReviewItem = { word: Word; reason: string; kind: "priority" | "norma
 export const REVIEW_SIZE = 40;
 /** 40問のうち優先枠の割合（残りは普通の単語を織り込む） */
 const PRIORITY_RATIO = 0.7;
+/** 普通の単語枠で、はじめての単語の出やすさ（学習済みの語は 0.75〜1.6 程度。標準は 1） */
+const NEW_WEIGHT = 1.4;
 
 /**
  * 今日の復習を組み立てる。
@@ -68,7 +70,8 @@ export function buildTodayReview(
 
   const normal = weightedShuffle(
     pool.filter((w) => !chosen.has(w.n)),
-    (w) => difficultyWeight(progress.get(w.n), now),
+    // まだ学習していない語は少しだけ出やすくする
+    (w) => (progress.get(w.n)?.last_studied_at ? difficultyWeight(progress.get(w.n), now) : NEW_WEIGHT),
   )
     .slice(0, size - priority.length)
     .map<ReviewItem>((w) => ({ word: w, reason: progress.get(w.n)?.last_studied_at ? "ランダム" : "はじめての単語", kind: "normal" }));
