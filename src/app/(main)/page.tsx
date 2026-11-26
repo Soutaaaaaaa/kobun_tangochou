@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import AppBar, { Page } from "@/components/AppBar";
 import { useProgress } from "@/components/ProgressProvider";
 import StreakCard from "@/components/StreakCard";
+import WordSearch from "@/components/WordSearch";
 import { ago, isKnown } from "@/lib/progress";
 import { BOOKS } from "@/lib/books";
 import { REVIEW_SIZE } from "@/lib/review";
@@ -66,6 +67,7 @@ export default function Home() {
       />
       <Page>
         <StreakCard />
+        <WordSearch book={book} />
         {paused.length > 0 && resumeMode !== "fresh" && (
           <section className="grid gap-1.5">
             <h2 className="px-0.5 text-[13px] font-bold text-muted">中断中の学習</h2>
