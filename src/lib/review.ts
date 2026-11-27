@@ -8,12 +8,15 @@ export const REVIEW_SIZE = 40;
 /** 40問のうち優先枠の割合（残りは普通の単語を織り込む） */
 const PRIORITY_RATIO = 0.7;
 /** 普通の単語枠で、はじめての単語の出やすさ（学習済みの語は 0.75〜1.6 程度。標準は 1） */
-const NEW_WEIGHT = 1.4;
+const NEW_WEIGHT = 2;
+/** まだ学習していない語が残っているあいだ、必ず入れる「はじめての単語」の割合 */
+const NEW_RATIO = 0.25;
 
 /**
  * 今日の復習を組み立てる。
  * 優先度: 数日前（1〜7日前、とくに3日前前後）に間違えた語 > 苦手リストの語 > しばらく学習していない語。
- * 今日すでに正解した語は後回し。優先枠のあとに、ランダムな「普通の単語」を混ぜてシャッフルする。
+ * 今日すでに正解した語は後回し。まだ学習していない語があれば4分の1をはじめての単語にし、
+ * 残りにランダムな「普通の単語」を混ぜてシャッフルする。
  */
 export function buildTodayReview(
   progress: ProgressMap,
@@ -65,16 +68,19 @@ export function buildTodayReview(
   }
 
   scored.sort((a, b) => b.score - a.score);
-  const priority = scored.slice(0, Math.round(size * PRIORITY_RATIO));
-  const chosen = new Set(priority.map((x) => x.word.n));
+  const unstudied = pool.filter((w) => !progress.get(w.n)?.last_studied_at);
+  const newSlots = Math.min(Math.round(size * NEW_RATIO), unstudied.length);
+  const priority = scored.slice(0, Math.min(Math.round(size * PRIORITY_RATIO), size - newSlots));
+  const fresh = shuffle(unstudied).slice(0, newSlots);
+  const chosen = new Set([...priority.map((x) => x.word.n), ...fresh.map((w) => w.n)]);
 
-  const normal = weightedShuffle(
+  const rest = weightedShuffle(
     pool.filter((w) => !chosen.has(w.n)),
-    // まだ学習していない語は少しだけ出やすくする
+    // 残りの枠でも、まだ学習していない語を出やすくする
     (w) => (progress.get(w.n)?.last_studied_at ? difficultyWeight(progress.get(w.n), now) : NEW_WEIGHT),
   )
-    .slice(0, size - priority.length)
-    .map<ReviewItem>((w) => ({ word: w, reason: progress.get(w.n)?.last_studied_at ? "ランダム" : "はじめての単語", kind: "normal" }));
+    .slice(0, size - priority.length - fresh.length);
+  const normal = [...fresh, ...rest].map<ReviewItem>((w) => ({ word: w, reason: progress.get(w.n)?.last_studied_at ? "ランダム" : "はじめての単語", kind: "normal" }));
 
   return shuffle([...priority.map<ReviewItem>((x) => ({ word: x.word, reason: x.reason, kind: "priority" })), ...normal]);
 }
